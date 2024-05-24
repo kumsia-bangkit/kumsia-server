@@ -12,33 +12,16 @@
    > karena terkadang (misal: di Ubuntu atau macOS) Python 3 hanya bisa
    > dipanggil dengan `python3`, bukan `python`.
 
-3. Aktifkan *virtual environment* yang telah dibuat.\
-   Di Windows Powershell:
+2. Instal project libraries pada *virtual environment* tersebut.
 
    ```shell
-   .\env\Scripts\Activate.ps1
+   ./env/Scripts/activate
+   pip install -r requirements.txt
    ```
-   Di Windows Git Bash:
-
-   ```shell
-   source ./env/Scripts/activate
+   
+3. Aktifkan *virtual environment* yang telah dibuat dan menjalankan server uvicorn
    ```
-
-   Di Linux/macOS:
-
-   ```shell
-   source ./env/bin/activate
+   cd app
+   ./runserver.sh
    ```
-
-   Jika berhasil, akan muncul `(env)` pada *prompt* cmd/terminal kamu.
-
-4. Instal FastAPI pada *virtual environment* tersebut.
-
-   ```shell
-   pip install fastapi
-   ```
-
-## Run Proyek
-```shell
-fastapi dev app/main.py
-```
+   * Menggunakan git bash, untuk menjalankan shell script
