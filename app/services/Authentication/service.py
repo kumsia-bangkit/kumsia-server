@@ -1,4 +1,5 @@
+from . import response_schema
 from fastapi.responses import JSONResponse
 
-def get_test():
-    return JSONResponse({"message": "Halo"}, status_code=200)
+def register():
+    return "Halo"

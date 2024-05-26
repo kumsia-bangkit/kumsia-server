@@ -1,9 +1,9 @@
 from fastapi import APIRouter
-from . import schema, service as AuthService
+from . import response_schema, request_schema, service as AuthService
 
 auth_router = APIRouter()
 
-@auth_router.get('/test', tags=['Auth'])
-async def get_test():
-    get_test_response = AuthService.get_test()
-    return get_test_response
+@auth_router.get('/register', tags=['Auth'])
+async def register(request: request_schema.CreateUser):
+    register_response = AuthService.register(request)
+    return register_response
