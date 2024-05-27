@@ -1,7 +1,10 @@
+import jwt
+
 from passlib.context import CryptContext
-from jwt.exceptions import InvalidTokenError
+from datetime import datetime, timedelta, timezone
 from .database import create_connection
 from .utility import show_responses
+from .environment import ALGORITHM, ACCESS_TOKEN_EXPIRE_DAYS, SECRET_KEY
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -23,6 +26,9 @@ def authenticate_user(username: str, password: str):
             """, (username,)
         )
         temp_data = cursor.fetchone()
+        if not temp_data:
+            return show_responses("User not found", 404)
+
         user_data = {
             "id": temp_data[0],
             "username": temp_data[1],
@@ -33,7 +39,14 @@ def authenticate_user(username: str, password: str):
         if username != db_username:
             return False
         if not verify_password(password, temp_data[2]):
-            return False
+            return show_responses("Incorrect Password", 401)
         return user_data
     except Exception as err:
         return show_responses("Failed when finding users", 401, error=err)
+    
+def create_access_token(user_data: dict):
+    encode_data = user_data.copy()
+    expire = datetime.now() + timedelta(days=int(ACCESS_TOKEN_EXPIRE_DAYS))
+    encode_data.update({"exp": expire})
+    jwt_token = jwt.encode(encode_data, SECRET_KEY, algorithm=ALGORITHM)
+    return jwt_token
