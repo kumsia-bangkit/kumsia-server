@@ -1,5 +1,4 @@
 from . import response_schema
-from fastapi.responses import JSONResponse
 
-def register():
-    return "Halo"
+def register(request):
+    return response_schema.UserCreated(message="jasbdhuysabutdrcv")
