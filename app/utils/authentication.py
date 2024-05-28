@@ -40,6 +40,7 @@ def authenticate_user(username: str, password: str):
             return False
         if not verify_password(password, temp_data[2]):
             return show_responses("Incorrect Password", 401)
+        conn.close()
         return user_data
     except Exception as err:
         return show_responses("Failed when finding users", 401, error=err)

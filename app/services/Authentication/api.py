@@ -17,7 +17,7 @@ async def login_for_access_token(request: Annotated[OAuth2PasswordRequestForm, D
     token = create_access_token(user_data)
     return response_schema.Login(access_token=token)
     
-@auth_router.post('/register', tags=['Authentication'], response_model=response_schema.UserCreated)
+@auth_router.post('/register', tags=['Authentication'])
 async def register(request: request_schema.CreateUser):
     register_response = AuthService.register(request)
     return register_response
