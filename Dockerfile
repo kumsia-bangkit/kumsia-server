@@ -17,4 +17,4 @@ COPY ./app /code/app
 EXPOSE 2134
 
 # Run main.py when the container launches
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "2134"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "2134"]
