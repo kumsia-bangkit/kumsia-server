@@ -1,5 +1,0 @@
-runtime: python39
-
-entrypoint: uvicorn main:app --reload --host 0.0.0.0 --port 2134
-instance_class: F1
-service: default
