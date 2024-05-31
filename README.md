@@ -21,7 +21,6 @@
    
 3. Aktifkan *virtual environment* yang telah dibuat dan menjalankan server uvicorn
    ```
-   cd app
    ./runserver.sh
    ```
    * Menggunakan git bash, untuk menjalankan shell script
