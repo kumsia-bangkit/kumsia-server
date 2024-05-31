@@ -2,16 +2,16 @@
 FROM python:3.9
 
 # 
-WORKDIR /
+WORKDIR /code
 
 # 
-COPY ./requirements.txt /requirements.txt
+COPY ./requirements.txt /code/requirements.txt
 
 # 
-RUN pip install --no-cache-dir --upgrade -r /requirements.txt
+RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
 
 # 
-COPY ./app /app
+COPY ./app /code/app
 
 # Make port 2134 available to the world outside this container
 EXPOSE 2134
