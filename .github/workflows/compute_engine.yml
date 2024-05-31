@@ -42,7 +42,6 @@ jobs:
     steps:
     - name: Authorize
       run: |
-        chmod 400 ${{ secrets.SSH_KEY }}
         apk update && apk add openssh-client
         ssh -o StrictHostKeyChecking=no -i ${{ secrets.SSH_KEY }} ${{ secrets.GCP_USERNAME }}@${{ secrets.GCP_STATIC_IP }} "
     - name: Deploy
