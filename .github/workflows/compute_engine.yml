@@ -40,13 +40,16 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Authorize
+    - name: Set up SSH
       run: |
-        apk update && apk add openssh-client
-        ssh -o StrictHostKeyChecking=no -i ${{ secrets.SSH_KEY }} ${{ secrets.GCP_USERNAME }}@${{ secrets.GCP_STATIC_IP }} "
-    - name: Deploy
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          echo "StrictHostKeyChecking no" >> ~/.ssh/config
+        
+    - name: Deployment
       run: |
+        ssh -i ~/.ssh/id_rsa ${{ secrets.GCP_USERNAME }}@${{ secrets.GCP_STATIC_IP }} "
         sudo docker container rm -f ${{ secrets.CONTAINER_NAME }} || true &&
         sudo docker image rm -f ${{ secrets.REGISTRY_USER }}/${{ secrets.IMAGE_NAME }}:${{ secrets.IMAGE_TAG }} || true &&
         sudo docker run --name ${{ secrets.CONTAINER_NAME }} -d -p 2134:2134 ${{ secrets.REGISTRY_USER }}/${{ secrets.IMAGE_NAME }}:${{ secrets.IMAGE_TAG }}"
-       
