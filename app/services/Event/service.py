@@ -9,6 +9,10 @@ from services.Event.utils import *
 conn = create_connection()
 cur = conn.cursor()
 
+# TODO: Remove dummy id
+user_id = "0b3933fc-1163-49ff-b61d-cc757a408cbf"
+organization_id = "0b3933fc-1163-49ff-b61d-cc757a408123"
+
 def get_all():
     cur.execute("SELECT * FROM event;")
     events = cur.fetchall()
@@ -77,7 +81,7 @@ def post_event(event: schema.Event):
     name = event.name
     location = event.location
     # TODO: Set up cloud storage
-    # profile_picture =
+    profile_picture = event.profile_picture
     status = Status.DRAFT
     type = event.type
     date_time = event.date_time
@@ -148,7 +152,7 @@ def update_event(event: schema.Event):
         name = event.name
         location = event.location
         # TODO: Set up cloud storage
-        # profile_picture =
+        profile_picture = event.profile_picture
         type = event.type
         date_time = event.date_time
         city = event.city
@@ -420,17 +424,3 @@ def cancel_join_event(event_id: str):
     except Exception as e:
         conn.rollback()
         print(f"An error occurred: {e}")
-
-
-    
-
-    
-
-    
-
-    
-    
-        
-    
-
-    
