@@ -16,9 +16,9 @@ def register(request):
     try:
         cursor.execute(
             """
-            INSERT INTO users (id, username, password, first_name, last_name, dob, roles, gender)
-            VALUES(%s, %s, %s, %s, %s, %s, %s, %s)
-            """, (str(uuid.uuid4()), username.lower(), get_password_hash(request.password), request.first_name, request.last_name, request.dob, request.roles, request.gender)
+            INSERT INTO users (user_id, username, email, password, name, dob, gender)
+            VALUES(%s, %s, %s, %s, %s, %s, %s)
+            """, (str(uuid.uuid4()), username.lower(), request.email, get_password_hash(request.password), request.name, request.dob, request.gender)
         )
         conn.commit()
         conn.close()

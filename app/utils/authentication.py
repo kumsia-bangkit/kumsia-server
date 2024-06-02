@@ -36,15 +36,14 @@ def authenticate_user(username: str, password: str):
             return show_responses("User not found", 404)
 
         user_data = {
-            "id": temp_data[0],
-            "username": temp_data[1],
-            "roles": temp_data[6],
-            "gender": temp_data[7],
+            "user_id": temp_data[0],
+            "username": temp_data[2],
+            "gender": temp_data[10],
         }
-        db_username = temp_data[1]
+        db_username = temp_data[2]
         if username != db_username:
             return False
-        if not verify_password(password, temp_data[2]):
+        if not verify_password(password, temp_data[4]):
             return show_responses("Incorrect Password", 401)
         conn.close()
         return user_data
@@ -70,14 +69,13 @@ def get_user_from_id(user_id: str):
     cursor = conn.cursor()
     try:
         cursor.execute(
-            "SELECT * FROM users WHERE id=%s", (user_id,)
+            "SELECT * FROM users WHERE user_id=%s", (user_id,)
         )
         temp_data = cursor.fetchone()
         user_data = {
             "id": temp_data[0],
-            "username": temp_data[1],
-            "roles": temp_data[6],
-            "gender": temp_data[7],
+            "username": temp_data[2],
+            "gender": temp_data[10],
         }
         return user_data
     except Exception as err:
@@ -86,7 +84,7 @@ def get_user_from_id(user_id: str):
 def validate_token(token: str):
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id: str = payload.get("id")
+        user_id: str = payload.get("user_id")
         if user_id is None:
             raise handle_token_error('User id not provided')
         return payload
@@ -95,6 +93,6 @@ def validate_token(token: str):
 
 def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
     payload = validate_token(token)
-    user_id: str = payload.get('id')
+    user_id: str = payload.get('user_id')
     user_data = get_user_from_id(user_id)
     return user_data
