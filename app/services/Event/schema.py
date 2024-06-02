@@ -1,22 +1,30 @@
-from uuid import UUID, uuid4
 from pydantic import BaseModel
 from datetime import datetime
 from typing import Optional
-from enums.gender import Gender
 from enums.event_status import Status
-from services.Authentication.schema import Individual, Organization
+
+class Preference(BaseModel):
+    preference_id: Optional[str]
+    hobby: Optional[list]
+    religion: Optional[list]
+    city: Optional[list]
+    gender: Optional[list]
 
 class Event(BaseModel):
-    # id: Optional[UUID] = uuid4()
-    city: Optional[str]
-    capacity: Optional[int]
-    contact_link: Optional[str]
-    date_time: Optional[datetime]
-    description: Optional[str]
-    disclaimer: Optional[str]
-    gender_restriction: Optional[Gender]
-    # last_edited: Optional[datetime]
-    location: Optional[str]
+    event_id: Optional[str]
     name: Optional[str]
-    # organizer: Optional[Organization]
-    # status: Optional[Status]
+    location: Optional[str]
+    profile_picture: Optional[str]
+    status: Optional[Status]
+    type: Optional[str]
+    date_time: Optional[datetime]
+    city: Optional[str]
+    link: Optional[str]
+    description: Optional[str]
+    attendee_criteria: Optional[str]
+    contact: Optional[str]
+    capacity: Optional[int]
+    hobby: Optional[list]
+    religion: Optional[list]
+    city: Optional[list]
+    gender: Optional[list]

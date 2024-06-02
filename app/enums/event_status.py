@@ -1,7 +1,7 @@
 from enum import Enum
 
 class Status(str, Enum):
-    draft = "draft"         # event can be edited
-    submitted = "submitted" # event can't be edited
-    open = "open"           # open for registration
-    closed = "closed"       # registration is closed
+    DRAFT = "Draft"         # event can be edited
+    OPEN = "Open"           # open for registration
+    CLOSED = "Closed"       # registration is closed
+    CANCELLED = "Cancelled" # an open event is cancelled
