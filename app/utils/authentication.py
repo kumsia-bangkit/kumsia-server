@@ -36,14 +36,14 @@ def authenticate_user(username: str, password: str):
             return show_responses("User not found", 404)
 
         user_data = {
-            "user_id": temp_data[0],
-            "username": temp_data[2],
-            "gender": temp_data[10],
+            "user_id": temp_data['user_id'],
+            "username": temp_data['username'],
+            "gender": temp_data['gender'],
         }
-        db_username = temp_data[2]
+        db_username = temp_data['username']
         if username != db_username:
             return False
-        if not verify_password(password, temp_data[4]):
+        if not verify_password(password, temp_data['password']):
             return show_responses("Incorrect Password", 401)
         conn.close()
         return user_data
@@ -73,9 +73,9 @@ def get_user_from_id(user_id: str):
         )
         temp_data = cursor.fetchone()
         user_data = {
-            "id": temp_data[0],
-            "username": temp_data[2],
-            "gender": temp_data[10],
+            "user_id": temp_data['user_id'],
+            "username": temp_data['username'],
+            "gender": temp_data['gender'],
         }
         return user_data
     except Exception as err:
