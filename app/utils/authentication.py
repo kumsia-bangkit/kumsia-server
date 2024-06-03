@@ -36,9 +36,7 @@ def authenticate_user(username: str, password: str):
             return show_responses("User not found", 404)
 
         user_data = {
-            "user_id": temp_data['user_id'],
-            "username": temp_data['username'],
-            "gender": temp_data['gender'],
+            "sub": temp_data['user_id'],
         }
         db_username = temp_data['username']
         if username != db_username:
@@ -84,7 +82,7 @@ def get_user_from_id(user_id: str):
 def validate_token(token: str):
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id: str = payload.get("user_id")
+        user_id: str = payload.get("sub")
         if user_id is None:
             raise handle_token_error('User id not provided')
         return payload
@@ -94,7 +92,7 @@ def validate_token(token: str):
 def validate_token_and_id(token: str):
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id: str = payload.get("user_id")
+        user_id: str = payload.get("sub")
         if user_id is None:
             raise handle_token_error('User id not provided')
         return user_id
@@ -103,6 +101,6 @@ def validate_token_and_id(token: str):
 
 def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
     payload = validate_token(token)
-    user_id: str = payload.get('user_id')
+    user_id: str = payload.get('sub')
     user_data = get_user_from_id(user_id)
     return user_data
