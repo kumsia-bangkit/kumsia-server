@@ -5,3 +5,7 @@ class Status(str, Enum):
     OPEN = "Open"           # open for registration
     CLOSED = "Closed"       # registration is closed
     CANCELLED = "Cancelled" # an open event is cancelled
+
+class Type(str, Enum):
+    ONLINE = "Online"
+    OFFLINE = "Offline"

@@ -1,7 +1,7 @@
 import os
 from google.cloud import storage
 
-os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = r'cert/kumsia-key.json'
+os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = r'app/cert/kumsia-key.json'
 class GCStorage:
     def __init__(self):
         self.storage_client = storage. Client()

@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Header
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.responses import JSONResponse
 from typing import Annotated
-from utils.authentication import authenticate_user, create_access_token, get_current_user
+from app.utils.authentication import authenticate_user, create_access_token, get_current_user
 from . import response_schema, request_schema, service as AuthService
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
