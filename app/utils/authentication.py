@@ -91,6 +91,16 @@ def validate_token(token: str):
     except InvalidTokenError:
         raise handle_token_error('Token Expired or Invalid')
 
+def validate_token_and_id(token: str):
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        user_id: str = payload.get("user_id")
+        if user_id is None:
+            raise handle_token_error('User id not provided')
+        return user_id
+    except InvalidTokenError:
+        raise handle_token_error('Token Expired or Invalid')
+
 def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
     payload = validate_token(token)
     user_id: str = payload.get('user_id')
