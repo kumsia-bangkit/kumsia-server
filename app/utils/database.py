@@ -1,6 +1,7 @@
 import psycopg
 import os
 from dotenv import load_dotenv
+from psycopg.rows import dict_row
 
 load_dotenv()
 
@@ -16,6 +17,7 @@ def create_connection():
         port=DB_PORT,
         dbname=DB_NAME,
         user=DB_USER,
-        password=DB_PASSWORD
+        password=DB_PASSWORD,
+        row_factory=dict_row
     )
     return connection
