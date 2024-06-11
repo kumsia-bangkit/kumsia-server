@@ -36,15 +36,12 @@ def authenticate_user(username: str, password: str):
             return show_responses("User not found", 404)
 
         user_data = {
-            "id": temp_data[0],
-            "username": temp_data[1],
-            "roles": temp_data[6],
-            "gender": temp_data[7],
+            "sub": temp_data['user_id'],
         }
-        db_username = temp_data[1]
+        db_username = temp_data['username']
         if username != db_username:
             return False
-        if not verify_password(password, temp_data[2]):
+        if not verify_password(password, temp_data['password']):
             return show_responses("Incorrect Password", 401)
         conn.close()
         return user_data
@@ -70,14 +67,13 @@ def get_user_from_id(user_id: str):
     cursor = conn.cursor()
     try:
         cursor.execute(
-            "SELECT * FROM users WHERE id=%s", (user_id,)
+            "SELECT * FROM users WHERE user_id=%s", (user_id,)
         )
         temp_data = cursor.fetchone()
         user_data = {
-            "id": temp_data[0],
-            "username": temp_data[1],
-            "roles": temp_data[6],
-            "gender": temp_data[7],
+            "user_id": temp_data['user_id'],
+            "username": temp_data['username'],
+            "gender": temp_data['gender'],
         }
         return user_data
     except Exception as err:
@@ -86,15 +82,25 @@ def get_user_from_id(user_id: str):
 def validate_token(token: str):
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id: str = payload.get("id")
+        user_id: str = payload.get("sub")
         if user_id is None:
             raise handle_token_error('User id not provided')
         return payload
     except InvalidTokenError:
         raise handle_token_error('Token Expired or Invalid')
 
+def validate_token_and_id(token: str):
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        user_id: str = payload.get("sub")
+        if user_id is None:
+            raise handle_token_error('User id not provided')
+        return user_id
+    except InvalidTokenError:
+        raise handle_token_error('Token Expired or Invalid')
+
 def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
     payload = validate_token(token)
-    user_id: str = payload.get('id')
+    user_id: str = payload.get('sub')
     user_data = get_user_from_id(user_id)
     return user_data

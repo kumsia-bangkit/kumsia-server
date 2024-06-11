@@ -3,6 +3,7 @@ import uuid
 from fastapi.responses import JSONResponse
 from . import request_schema, response_schema
 from app.utils.database import create_connection
+from app.utils.authentication import validate_token_and_id
 
 conn = create_connection()
 cur = conn.cursor()
@@ -22,9 +23,9 @@ def get_all_by_event(event_id: str):
     cur.execute(get_query)
     comments = cur.fetchall()
 
-    return comments
+    return response_schema.CommentList(comments=comments)
     
-def post_comment(comment: request_schema.Comment):
+def post_comment(comment: request_schema.Comment, user_id: str):
     insert_query = """
     INSERT INTO comment_table (
         comment_id, user_id, event_id, comment_text
@@ -32,8 +33,6 @@ def post_comment(comment: request_schema.Comment):
         %s, %s, %s, %s
     ) RETURNING comment_id;
     """
-    # TODO: Get id from logged in user
-    # user_id =
 
     event_id = comment.event_id
     comment_text = comment.comment_text
@@ -48,16 +47,14 @@ def post_comment(comment: request_schema.Comment):
 
         new_comment = cur.fetchone()
 
-        return new_comment
+        if new_comment:
+            return response_schema.Comment(**new_comment)
         
     except Exception as e:
         conn.rollback()
         print(f"An error occurred: {e}")
 
-def delete_comment(comment_id: str):
-    # TODO: Get id from logged in user
-    # user_id =
-
+def delete_comment(comment_id: str, user_id: str):
     cur.execute(f"SELECT * FROM comment_table WHERE comment_id='{comment_id}' and user_id='{user_id}';")
     comment = cur.fetchone()
 
