@@ -26,7 +26,7 @@ class OrganizationEvent(BaseModel):
     hobby_preference: Optional[list]
     religion_preference: Optional[list]
     city_preference: Optional[list]
-    gender_preference: Optional[list[Gender | None]]
+    gender_preference: Optional[list[Gender]]
 
 
 class OrganizationEventList(BaseModel):
@@ -54,7 +54,7 @@ class UserEvent(BaseModel):
     hobby_preference: Optional[list]
     religion_preference: Optional[list]
     city_preference: Optional[list]
-    gender_preference: Optional[list[Gender | None]]
+    gender_preference: Optional[list[Gender]]
 
 class UserEventList(BaseModel):
-    events: Optional[List[UserEvent | None]]
+    events: Optional[List[UserEvent]]
