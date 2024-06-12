@@ -48,6 +48,16 @@ def post_like(event_id: str, user_id: str):
 
         new_like = cur.fetchone()
 
+        if new_like:
+            update_query = f"""
+                UPDATE events 
+                SET like_count = like_count + 1
+                WHERE event_id = '{str(event_id)}'
+                RETURNING event_id;
+                """
+            
+            cur.execute(update_query)
+
         response = response_schema.Like(
             event_id=event_id, user_id=user_id,
             is_liked= True if new_like else False)
@@ -76,6 +86,16 @@ def delete_like(event_id: str, user_id: str):
         conn.commit()
 
         deleted_like = cur.fetchone()
+
+        if deleted_like:
+            update_query = f"""
+                UPDATE events 
+                SET like_count = like_count - 1
+                WHERE event_id = '{str(event_id)}'
+                RETURNING event_id;
+                """
+            
+            cur.execute(update_query)
 
         response = response_schema.Like(
             event_id=event_id, user_id=user_id,
