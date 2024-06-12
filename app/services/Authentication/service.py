@@ -2,9 +2,9 @@ import uuid
 
 from . import response_schema as Response
 from fastapi.responses import JSONResponse
-from utils.database import create_connection
-from utils.authentication import get_password_hash
-from utils.utility import find_duplicate_data
+from app.utils.database import create_connection
+from app.utils.authentication import get_password_hash
+from app.utils.utility import find_duplicate_data
 
 def register(request):
     conn = create_connection()
