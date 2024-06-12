@@ -9,7 +9,7 @@ class Preference(BaseModel):
     hobby: Optional[list]
     religion: Optional[list]
     city: Optional[list]
-    gender: Optional[list[Gender | None]]
+    gender: Optional[list[Gender]]
 
     @model_validator(mode='before')
     @classmethod
@@ -32,7 +32,7 @@ class Event(BaseModel):
     hobby_preference: Optional[list]
     religion_preference: Optional[list]
     city_preference: Optional[list]
-    gender_preference: Optional[list[Gender | None]]
+    gender_preference: Optional[list[Gender]]
 
     @model_validator(mode='before')
     @classmethod
