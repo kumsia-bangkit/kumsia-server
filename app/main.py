@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from services.Authentication.api import auth_router
+from app.services.Authentication.api import auth_router
 from fastapi.middleware.cors import CORSMiddleware
 from app.services.Event.org_api import org_event_router
 from app.services.Event.user_api import user_event_router

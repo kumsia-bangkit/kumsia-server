@@ -188,7 +188,7 @@ def join_event(event_id: str, user_id: str):
 
         new_joined_event = cur.fetchone()
 
-        return get_event_by_id(new_joined_event["event_id"])
+        return get_event_by_id(new_joined_event["event_id"], user_id)
         
     except Exception as e:
         conn.rollback()
@@ -230,7 +230,7 @@ def cancel_join_event(event_id: str, user_id: str):
         
         unjoined_event = cur.fetchone()
 
-        return get_event_by_id(unjoined_event["event_id"])
+        return get_event_by_id(unjoined_event["event_id"], user_id)
 
     except Exception as e:
         conn.rollback()

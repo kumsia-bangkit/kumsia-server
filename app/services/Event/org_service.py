@@ -130,7 +130,7 @@ def post_event(event: request_schema.Event, profile_picture:str, organization_id
 
         new_event = cur.fetchone()
 
-        return get_event_by_id(new_event["event_id"])
+        return get_event_by_id(new_event["event_id"], organization_id)
         
     except Exception as e:
         conn.rollback()
@@ -214,7 +214,7 @@ def update_event(event_id:str, event: request_schema.Event, profile_picture:str,
 
         updated_event = cur.fetchone()
 
-        return get_event_by_id(updated_event["event_id"])
+        return get_event_by_id(updated_event["event_id"], organization_id)
         
     except Exception as e:
         conn.rollback()
@@ -283,7 +283,7 @@ def submit_event(event_id: str, organization_id: str):
 
         submitted_event = cur.fetchone()
 
-        return get_event_by_id(submitted_event["event_id"])
+        return get_event_by_id(submitted_event["event_id"], organization_id)
         
     except Exception as e:
         conn.rollback()
@@ -319,7 +319,7 @@ def cancel_event(event_id: str, organization_id: str):
 
         cancelled_event = cur.fetchone()
 
-        return get_event_by_id(cancelled_event["event_id"])
+        return get_event_by_id(cancelled_event["event_id"], organization_id)
         
     except Exception as e:
         conn.rollback()
