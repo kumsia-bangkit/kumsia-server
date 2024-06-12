@@ -1,4 +1,5 @@
 import datetime
+from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from app.utils.database import create_connection
 from app.utils.utility import show_responses, find_duplicate_data
@@ -36,8 +37,14 @@ def get_profile(id):
     try: 
         cursor.execute(
             """
-            """
+            SELECT *
+            FROM users
+            WHERE user_id=%s 
+            """,(id,)
         )
+        temp_data = cursor.fetchone()
+        data = jsonable_encoder(temp_data)
         conn.close()
+        return JSONResponse({"data": data}, status_code=200)
     except Exception as err:
         show_responses("Failed to get users information", 404, error=err)
