@@ -8,14 +8,7 @@ from app.services.Event.utils import *
 conn = create_connection()
 cur = conn.cursor()
 
-# TODO: Remove dummy id
-user_id = "0b3933fc-1163-49ff-b61d-cc757a408cbf"
-organization_id = "0b3933fc-1163-49ff-b61d-cc757a408123"
-
-def get_all():
-    # TODO: Get id from logged in user
-    # organization_id =
-
+def get_all(organization_id: str):
     get_query = f"""
         SELECT 
             e.event_id, 
@@ -51,10 +44,7 @@ def get_all():
 
     return response_schema.OrganizationEventList(events=events)
 
-def get_event_by_id(event_id: str):
-    # TODO: Get id from logged in user
-    # organization_id =
-
+def get_event_by_id(event_id: str, organization_id: str):
     get_query = f"""
         SELECT 
             e.event_id, 
@@ -96,7 +86,7 @@ def get_event_by_id(event_id: str):
     return JSONResponse({"message": f"No event with id {event_id}"}, status_code=404)
     
 
-def post_event(event: request_schema.Event, profile_picture:str):
+def post_event(event: request_schema.Event, profile_picture:str, organization_id: str):
     insert_query = """
     INSERT INTO events (
         event_id, organization_id, preference_id, name, location, profie_picture,
@@ -106,8 +96,6 @@ def post_event(event: request_schema.Event, profile_picture:str):
         %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
     ) RETURNING event_id;
     """
-    # TODO: Get id from logged in user
-    # organization_id =
 
     preference = request_schema.Preference(
         hobby=event.hobby_preference,
@@ -142,16 +130,13 @@ def post_event(event: request_schema.Event, profile_picture:str):
 
         new_event = cur.fetchone()
 
-        return get_event_by_id(new_event["event_id"])
+        return get_event_by_id(new_event["event_id"], organization_id)
         
     except Exception as e:
         conn.rollback()
         print(f"An error occurred: {e}")
 
-def update_event(event_id:str, event: request_schema.Event, profile_picture:str):
-    # TODO: Get id from logged in user
-    # organization_id =
-
+def update_event(event_id:str, event: request_schema.Event, profile_picture:str, organization_id: str):
     cur.execute(f"SELECT * FROM events WHERE organization_id='{organization_id}' AND event_id='{event_id}';")
     cur_event = cur.fetchone()
 
@@ -181,7 +166,6 @@ def update_event(event_id:str, event: request_schema.Event, profile_picture:str)
 
         name = event.name
         location = event.location
-        # TODO: Set up cloud storage
         type = event.type
         event_start = event.event_start
         city = event.city
@@ -230,16 +214,13 @@ def update_event(event_id:str, event: request_schema.Event, profile_picture:str)
 
         updated_event = cur.fetchone()
 
-        return get_event_by_id(updated_event["event_id"])
+        return get_event_by_id(updated_event["event_id"], organization_id)
         
     except Exception as e:
         conn.rollback()
         print(f"An error occurred: {e}")
 
-def delete_event(event_id: str):
-    # TODO: Get id from logged in user
-    # organization_id =
-
+def delete_event(event_id: str, organization_id: str):
     cur.execute(f"SELECT * FROM events WHERE organization_id='{organization_id}' AND event_id='{event_id}';")
     cur_event = cur.fetchone()
 
@@ -272,10 +253,7 @@ def delete_event(event_id: str):
         conn.rollback()
         print(f"An error occurred: {e}")
 
-def submit_event(event_id: str):
-    # TODO: Get id from logged in user
-    # organization_id =
-
+def submit_event(event_id: str, organization_id: str):
     cur.execute(f"SELECT * FROM events WHERE organization_id='{organization_id}' AND event_id='{event_id}';")
     cur_event = cur.fetchone()
 
@@ -305,16 +283,13 @@ def submit_event(event_id: str):
 
         submitted_event = cur.fetchone()
 
-        return get_event_by_id(submitted_event["event_id"])
+        return get_event_by_id(submitted_event["event_id"], organization_id)
         
     except Exception as e:
         conn.rollback()
         print(f"An error occurred: {e}")
 
-def cancel_event(event_id: str):
-    # TODO: Get id from logged in user
-    # organization_id =
-
+def cancel_event(event_id: str, organization_id: str):
     cur.execute(f"SELECT * FROM events WHERE organization_id='{organization_id}' AND event_id='{event_id}';")
     cur_event = cur.fetchone()
 
@@ -344,7 +319,7 @@ def cancel_event(event_id: str):
 
         cancelled_event = cur.fetchone()
 
-        return get_event_by_id(cancelled_event["event_id"])
+        return get_event_by_id(cancelled_event["event_id"], organization_id)
         
     except Exception as e:
         conn.rollback()

@@ -20,7 +20,8 @@ def find_duplicate_data(table: str, column: str, data):
         """
         cursor.execute(query, (data,))
         result = cursor.fetchone()
+        
         conn.close()
-        return result[0] > 0
+        return result['count'] > 0
     except Exception as err:
         return JSONResponse({"message": "Failed find data", "error": err}, status_code=500)

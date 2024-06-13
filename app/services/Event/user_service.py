@@ -9,14 +9,7 @@ from app.services.Event.utils import *
 conn = create_connection()
 cur = conn.cursor()
 
-# TODO: Remove dummy id
-user_id = "0b3933fc-1163-49ff-b61d-cc757a408cbf"
-organization_id = "0b3933fc-1163-49ff-b61d-cc757a408123"
-
-def get_all():
-    # TODO: Get id from logged in user
-    # user_id =
-
+def get_all(user_id: str):
     get_query = f"""
         SELECT 
             e.event_id, 
@@ -56,10 +49,7 @@ def get_all():
 
     return response_schema.UserEventList(events=events)
 
-def get_all_joined_event():
-    # TODO: Get id from logged in user
-    # user_id =
-
+def get_all_joined_event(user_id: str):
     today = datetime.today()
 
     get_query = f"""
@@ -109,7 +99,7 @@ def get_all_joined_event():
         conn.rollback()
         print(f"An error occurred: {e}")
 
-def get_event_by_id(event_id: str):
+def get_event_by_id(event_id: str, user_id: str):
     get_query = f"""
         SELECT 
             e.event_id, 
@@ -142,7 +132,7 @@ def get_event_by_id(event_id: str):
         JOIN 
             preference p ON e.preference_id = p.preference_id
         LEFT JOIN 
-            joined_event je ON e.event_id = je.event_id
+            joined_event je ON e.event_id = je.event_id AND je.user_id = '{user_id}'
         WHERE 
             e.event_id = '{event_id}';
     """
@@ -154,10 +144,7 @@ def get_event_by_id(event_id: str):
     
     return JSONResponse({"message": f"No event with id {event_id}"}, status_code=404)
 
-def join_event(event_id: str):
-    # TODO: Get id from logged in user
-    # user_id =
-
+def join_event(event_id: str, user_id: str):
     cur.execute(f"SELECT * FROM joined_event WHERE user_id='{user_id}' AND event_id='{event_id}';")
     cur_joined_event = cur.fetchone()
 
@@ -201,16 +188,13 @@ def join_event(event_id: str):
 
         new_joined_event = cur.fetchone()
 
-        return get_event_by_id(new_joined_event["event_id"])
+        return get_event_by_id(new_joined_event["event_id"], user_id)
         
     except Exception as e:
         conn.rollback()
         print(f"An error occurred: {e}")
 
-def cancel_join_event(event_id: str):
-    # TODO: Get id from logged in user
-    # user_id =
-
+def cancel_join_event(event_id: str, user_id: str):
     delete_query = """
         DELETE FROM joined_event
         WHERE event_id = %s AND user_id = %s
@@ -246,7 +230,7 @@ def cancel_join_event(event_id: str):
         
         unjoined_event = cur.fetchone()
 
-        return get_event_by_id(unjoined_event["event_id"])
+        return get_event_by_id(unjoined_event["event_id"], user_id)
 
     except Exception as e:
         conn.rollback()

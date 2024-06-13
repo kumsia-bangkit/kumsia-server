@@ -16,9 +16,29 @@ def register(request):
     try:
         cursor.execute(
             """
-            INSERT INTO users (id, username, password, first_name, last_name, dob, roles, gender)
-            VALUES(%s, %s, %s, %s, %s, %s, %s, %s)
-            """, (str(uuid.uuid4()), username.lower(), get_password_hash(request.password), request.first_name, request.last_name, request.dob, request.roles, request.gender)
+            INSERT INTO users (user_id, username, email, password, name, dob, gender)
+            VALUES(%s, %s, %s, %s, %s, %s, %s)
+            """, (str(uuid.uuid4()), username.lower(), request.email, get_password_hash(request.password), request.name, request.dob, request.gender)
+        )
+        conn.commit()
+        conn.close()
+        return JSONResponse({"message": "Account has beed created"}, status_code=201)
+    except Exception as err:
+        return JSONResponse({"message": "Failed creating an account", "err": err}, status_code=500)
+
+def register_organization(request):
+    conn = create_connection()
+    cursor = conn.cursor()
+    username = request.username
+    isDuplicate = find_duplicate_data("organization", "username", username.lower())
+    if isDuplicate:
+        return JSONResponse({"messagge": f"{request.username} username has been taken"}, status_code=406)
+    try:
+        cursor.execute(
+            """
+            INSERT INTO organization (organization_id, name, username, password, email)
+            VALUES(%s, %s, %s, %s, %s)
+            """, (str(uuid.uuid4()), request.name, username.lower(), get_password_hash(request.password), request.email)
         )
         conn.commit()
         conn.close()

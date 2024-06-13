@@ -4,8 +4,6 @@ on:
   # Triggers the workflow on push or pull request events but only for the main branch
   push:
     branches: [ master ]
-  pull_request:
-    branches: [ master ]
   
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -52,4 +50,14 @@ jobs:
         ssh -i ~/.ssh/id_rsa ${{ secrets.GCP_USERNAME }}@${{ secrets.GCP_STATIC_IP }} "
         sudo docker container rm -f ${{ secrets.CONTAINER_NAME }} || true &&
         sudo docker image rm -f ${{ secrets.REGISTRY_USER }}/${{ secrets.IMAGE_NAME }}:${{ secrets.IMAGE_TAG }} || true &&
-        sudo docker run --name ${{ secrets.CONTAINER_NAME }} -d -p 2134:2134 ${{ secrets.REGISTRY_USER }}/${{ secrets.IMAGE_NAME }}:${{ secrets.IMAGE_TAG }}"
+        sudo docker run -d -p 2134:2134 \
+            -e "DB_HOST=${{ secrets.DB_HOST }}" \
+            -e "DB_PORT=${{ secrets.DB_PORT }}" \
+            -e "DB_NAME=${{ secrets.DB_NAME }}" \
+            -e "DB_USER=${{ secrets.DB_USER }}" \
+            -e "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" \
+            -e "ALGORITHM=${{ secrets.ALGORITHM }}" \
+            -e "SECRET_KEY=${{ secrets.SECRET_KEY }}" \
+            -e "ACCESS_TOKEN_EXPIRE_DAYS=${{ secrets.ACCESS_TOKEN_EXPIRE_DAYS }}" \
+            -e "GOOGLE_APPLICATION_CREDENTIALS=${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}" \
+            --name ${{ secrets.CONTAINER_NAME }} ${{ secrets.REGISTRY_USER }}/${{ secrets.IMAGE_NAME }}:${{ secrets.IMAGE_TAG }}"
