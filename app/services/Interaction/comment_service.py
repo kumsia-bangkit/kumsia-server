@@ -31,7 +31,7 @@ def post_comment(comment: request_schema.Comment, user_id: str):
         comment_id, user_id, event_id, comment_text
     ) VALUES (
         %s, %s, %s, %s
-    ) RETURNING comment_id;
+    ) RETURNING *;
     """
 
     event_id = comment.event_id
