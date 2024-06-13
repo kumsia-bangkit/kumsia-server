@@ -1,5 +1,4 @@
-import json
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel
 from datetime import datetime
 from typing import List, Optional
 from app.enums.event import Type, Status
