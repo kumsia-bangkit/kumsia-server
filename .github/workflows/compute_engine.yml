@@ -1,7 +1,7 @@
 name: Deploy to Compute Engine
 
 on:
-  # Triggers the workflow on push or pull request events but only for the main branch
+  # Triggers the workflow on push or pull request events but only for the master branch
   push:
     branches: [ master ]
   
@@ -22,6 +22,9 @@ jobs:
     - name: Login to Docker Hub
       run: echo ${{ secrets.DOCKERHUB_ACCESS_TOKEN }} | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
 
+    - name: Copy GCP credentials to local file
+      run: echo "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}" > gcp-key.json
+
     - name: Build and push Docker image
       run: |
         docker buildx create --use
@@ -29,12 +32,13 @@ jobs:
           --file Dockerfile \
           --tag ${{ secrets.REGISTRY_USER }}/${{ secrets.IMAGE_NAME }}:${{ secrets.IMAGE_TAG }} \
           --push .
+        rm gcp-key.json
 
     env:
       DOCKER_CLI_EXPERIMENTAL: enabled
       DOCKER_BUILDKIT: 1
 
-  Deploy:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
@@ -59,4 +63,5 @@ jobs:
             -e "ALGORITHM=${{ secrets.ALGORITHM }}" \
             -e "SECRET_KEY=${{ secrets.SECRET_KEY }}" \
             -e "ACCESS_TOKEN_EXPIRE_DAYS=${{ secrets.ACCESS_TOKEN_EXPIRE_DAYS }}" \
+            -e "GOOGLE_APPLICATION_CREDENTIALS=/code/gcp-key.json" \
             --name ${{ secrets.CONTAINER_NAME }} ${{ secrets.REGISTRY_USER }}/${{ secrets.IMAGE_NAME }}:${{ secrets.IMAGE_TAG }}"
