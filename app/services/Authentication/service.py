@@ -25,3 +25,23 @@ def register(request):
         return JSONResponse({"message": "Account has beed created"}, status_code=201)
     except Exception as err:
         return JSONResponse({"message": "Failed creating an account", "err": err}, status_code=500)
+
+def register_organization(request):
+    conn = create_connection()
+    cursor = conn.cursor()
+    username = request.username
+    isDuplicate = find_duplicate_data("organization", "username", username.lower())
+    if isDuplicate:
+        return JSONResponse({"messagge": f"{request.username} username has been taken"}, status_code=406)
+    try:
+        cursor.execute(
+            """
+            INSERT INTO organization (organization_id, name, username, password, email)
+            VALUES(%s, %s, %s, %s, %s)
+            """, (str(uuid.uuid4()), request.name, username.lower(), get_password_hash(request.password), request.email)
+        )
+        conn.commit()
+        conn.close()
+        return JSONResponse({"message": "Account has beed created"}, status_code=201)
+    except Exception as err:
+        return JSONResponse({"message": "Failed creating an account", "err": err}, status_code=500)
