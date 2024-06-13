@@ -59,5 +59,4 @@ jobs:
             -e "ALGORITHM=${{ secrets.ALGORITHM }}" \
             -e "SECRET_KEY=${{ secrets.SECRET_KEY }}" \
             -e "ACCESS_TOKEN_EXPIRE_DAYS=${{ secrets.ACCESS_TOKEN_EXPIRE_DAYS }}" \
-            -e "GCP_CREDENTIALS=${{ secrets.GCP_CREDENTIALS }}" \
             --name ${{ secrets.CONTAINER_NAME }} ${{ secrets.REGISTRY_USER }}/${{ secrets.IMAGE_NAME }}:${{ secrets.IMAGE_TAG }}"
