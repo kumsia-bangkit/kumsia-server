@@ -8,7 +8,7 @@ class Comment(BaseModel):
     comment_text: Optional[str]
 
 class CommentList(BaseModel):
-    comments: Optional[List[Comment | None]]
+    comments: Optional[List[Comment]]
 
 class Like(BaseModel):
     event_id: Optional[str]
