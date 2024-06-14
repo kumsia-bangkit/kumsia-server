@@ -23,7 +23,7 @@ jobs:
       run: echo ${{ secrets.DOCKERHUB_ACCESS_TOKEN }} | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
 
     - name: Copy GCP credentials to local file
-      run: echo ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }} > gcp-key.json
+      run: echo ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }} | base64 --decode > gcp-key.json
 
     - name: Build and push Docker image
       run: |
