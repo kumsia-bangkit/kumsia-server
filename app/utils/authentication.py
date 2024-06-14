@@ -31,27 +31,8 @@ def authenticate_user(username: str, password: str):
             WHERE username=%s   
             """, (username,)
         )
-        temp_data = cursor.fetchone()
-        if not temp_data:
-            return show_responses("User not found", 404)
+        user_data = cursor.fetchone()
 
-        user_data = {
-            "sub": temp_data['user_id'],
-        }
-        db_username = temp_data['username']
-        if username != db_username:
-            return False
-        if not verify_password(password, temp_data['password']):
-            return show_responses("Incorrect Password", 401)
-        conn.close()
-        return user_data
-    except Exception as err:
-        return show_responses("Failed when finding users", 401, error=err)
-
-def authenticate_organization(username: str, password: str):
-    conn = create_connection()
-    cursor = conn.cursor()
-    try:
         cursor.execute(
             """
             SELECT * 
@@ -59,20 +40,28 @@ def authenticate_organization(username: str, password: str):
             WHERE username=%s   
             """, (username,)
         )
-        temp_data = cursor.fetchone()
-        if not temp_data:
+        org_data = cursor.fetchone()
+
+        if not user_data and not org_data:
             return show_responses("User not found", 404)
 
-        user_data = {
-            "sub": temp_data['organization_id'],
-        }
-        db_username = temp_data['username']
-        if username != db_username:
-            return False
+        if user_data:
+            temp_data = user_data
+            data = [{
+                "sub": user_data['user_id'],
+            }, "user"]
+
+        elif org_data:
+            temp_data = org_data
+            data = [{
+            "sub": org_data['organization_id'],
+            }, "organization"]
+
         if not verify_password(password, temp_data['password']):
             return show_responses("Incorrect Password", 401)
+        
         conn.close()
-        return user_data
+        return data
     except Exception as err:
         return show_responses("Failed when finding users", 401, error=err)
     

@@ -10,9 +10,10 @@ def register(request):
     conn = create_connection()
     cursor = conn.cursor()
     username = request.username
-    isDuplicate = find_duplicate_data("users", "username", username.lower())
-    if isDuplicate:
-        return JSONResponse({"messagge": f"{request.username} username has been taken"}, status_code=406)
+    user_exists = find_duplicate_data("users", "username", username.lower())
+    org_exists = find_duplicate_data("organization", "username", username.lower())
+    if user_exists or org_exists:
+        return JSONResponse({"messagge": f"username {request.username} has been taken"}, status_code=406)
     try:
         cursor.execute(
             """
@@ -30,9 +31,10 @@ def register_organization(request):
     conn = create_connection()
     cursor = conn.cursor()
     username = request.username
-    isDuplicate = find_duplicate_data("organization", "username", username.lower())
-    if isDuplicate:
-        return JSONResponse({"messagge": f"{request.username} username has been taken"}, status_code=406)
+    user_exists = find_duplicate_data("users", "username", username.lower())
+    org_exists = find_duplicate_data("organization", "username", username.lower())
+    if user_exists or org_exists:
+        return JSONResponse({"messagge": f"username {request.username} has been taken"}, status_code=406)
     try:
         cursor.execute(
             """
