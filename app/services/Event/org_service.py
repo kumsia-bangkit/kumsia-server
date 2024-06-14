@@ -136,7 +136,7 @@ def post_event(event: request_schema.Event, profile_picture:str, organization_id
         conn.rollback()
         print(f"An error occurred: {e}")
 
-def update_event(event_id:str, event: request_schema.Event, profile_picture:str, organization_id: str):
+def update_event(event_id:str, event: request_schema.Event, profile_picture:str | None, organization_id: str):
     cur.execute(f"SELECT * FROM events WHERE organization_id='{organization_id}' AND event_id='{event_id}';")
     cur_event = cur.fetchone()
 
@@ -166,6 +166,7 @@ def update_event(event_id:str, event: request_schema.Event, profile_picture:str,
 
         name = event.name
         location = event.location
+        profile_picture = profile_picture if profile_picture else cur_event["profie_picture"]
         type = event.type
         event_start = event.event_start
         city = event.city
@@ -189,22 +190,20 @@ def update_event(event_id:str, event: request_schema.Event, profile_picture:str,
 
         update_query = """
             UPDATE events 
-            SET location = %s, type = %s, city = %s,
-            link = %s, description = %s, capacity = %s, last_edited = %s
+            SET location = %s, type = %s, link = %s,
+            description = %s, last_edited = %s
             WHERE organization_id = %s AND event_id = %s
             RETURNING event_id;
             """
 
         location = event.location
         type = event.type
-        city = event.city
         link = event.link
         description = event.description
-        capacity = event.capacity
         last_edited = datetime.now().isoformat()
 
         event_data = (
-            location, type, city, link, description, capacity,
+            location, type, link, description,
             last_edited, str(organization_id), str(event_id)
         )
         
