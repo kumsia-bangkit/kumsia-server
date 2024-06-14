@@ -1,16 +1,10 @@
-from datetime import datetime, timedelta
 import uuid
 from fastapi.responses import JSONResponse
 from . import request_schema, response_schema
 from app.utils.database import create_connection
-from app.utils.authentication import validate_token_and_id
 
 conn = create_connection()
 cur = conn.cursor()
-
-# TODO: Remove dummy id
-user_id = "0b3933fc-1163-49ff-b61d-cc757a408cbf"
-organization_id = "0b3933fc-1163-49ff-b61d-cc757a408123"
 
 def get_all_by_event(event_id: str):
     get_query = f"""
