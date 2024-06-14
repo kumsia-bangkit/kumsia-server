@@ -49,6 +49,7 @@ class UserEvent(BaseModel):
     capacity: Optional[int]
     last_edited: Optional[datetime]
     joined: Optional[bool]
+    liked: Optional[bool]
     preference_id: Optional[str]
     hobby_preference: Optional[list]
     religion_preference: Optional[list]

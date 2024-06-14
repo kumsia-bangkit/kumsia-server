@@ -32,6 +32,10 @@ def get_all(user_id: str):
                 WHEN je.user_id IS NOT NULL THEN true
                 ELSE false
             END AS joined,
+            CASE 
+                WHEN l.user_id IS NOT NULL THEN true
+                ELSE false
+            END AS liked,
             e.preference_id, 
             p.hobby AS hobby_preference, 
             p.religion AS religion_preference, 
@@ -42,7 +46,9 @@ def get_all(user_id: str):
         JOIN 
             preference p ON e.preference_id = p.preference_id
         LEFT JOIN 
-            joined_event je ON e.event_id = je.event_id AND je.user_id = '{user_id}';
+            joined_event je ON e.event_id = je.event_id AND je.user_id = '{user_id}'
+        LEFT JOIN 
+            event_like l ON e.event_id = l.event_id AND l.user_id = '{user_id}';
     """
     cur.execute(get_query)
     events = cur.fetchall()
@@ -71,6 +77,10 @@ def get_all_joined_event(user_id: str):
             e.capacity, 
             e.last_edited, 
             true AS joined,
+            CASE 
+                WHEN l.user_id IS NOT NULL THEN true
+                ELSE false
+            END AS liked,
             e.preference_id, 
             p.hobby AS hobby_preference, 
             p.religion AS religion_preference, 
@@ -81,7 +91,9 @@ def get_all_joined_event(user_id: str):
         JOIN 
             preference p ON e.preference_id = p.preference_id
         JOIN 
-            joined_event je ON e.event_id = je.event_id
+            joined_event je ON e.event_id = je.event_id AND je.user_id = '{user_id}'
+        LEFT JOIN 
+            event_like l ON e.event_id = l.event_id AND l.user_id = '{user_id}'
         WHERE 
             je.user_id = %s AND e.event_start >= %s
         ORDER BY e.event_start ASC;
@@ -90,6 +102,55 @@ def get_all_joined_event(user_id: str):
     event_data = (user_id, today)
     try:
         cur.execute(get_query, event_data)
+        conn.commit()
+
+        events = cur.fetchall()
+        return response_schema.UserEventList(events=events)
+    
+    except Exception as e:
+        conn.rollback()
+        print(f"An error occurred: {e}")
+
+def get_all_liked_event(user_id: str):
+    get_query = f"""
+        SELECT 
+            e.event_id, 
+            e.organization_id, 
+            e.name, 
+            e.location, 
+            e.profie_picture, 
+            e.status, 
+            e.type, 
+            e.event_start, 
+            e.city, 
+            e.link, 
+            e.description, 
+            e.attendee_criteria, 
+            e.contact_varchar, 
+            e.like_count, 
+            e.capacity, 
+            e.last_edited, 
+            CASE 
+                WHEN je.user_id IS NOT NULL THEN true
+                ELSE false
+            END AS joined,
+            true AS liked,
+            e.preference_id, 
+            p.hobby AS hobby_preference, 
+            p.religion AS religion_preference, 
+            p.city AS city_preference, 
+            p.gender AS gender_preference
+        FROM 
+            events e
+        JOIN 
+            preference p ON e.preference_id = p.preference_id
+        JOIN 
+            event_like l ON e.event_id = l.event_id AND l.user_id = '{user_id}'
+        LEFT JOIN 
+            joined_event je ON e.event_id = je.event_id AND je.user_id = '{user_id}';
+    """
+    try:
+        cur.execute(get_query)
         conn.commit()
 
         events = cur.fetchall()
@@ -122,6 +183,10 @@ def get_event_by_id(event_id: str, user_id: str):
                 WHEN je.user_id IS NOT NULL THEN true
                 ELSE false
             END AS joined,
+            CASE 
+                WHEN l.user_id IS NOT NULL THEN true
+                ELSE false
+            END AS liked,
             e.preference_id, 
             p.hobby AS hobby_preference, 
             p.religion AS religion_preference, 
@@ -133,6 +198,8 @@ def get_event_by_id(event_id: str, user_id: str):
             preference p ON e.preference_id = p.preference_id
         LEFT JOIN 
             joined_event je ON e.event_id = je.event_id AND je.user_id = '{user_id}'
+        LEFT JOIN 
+            event_like l ON e.event_id = l.event_id AND l.user_id = '{user_id}'
         WHERE 
             e.event_id = '{event_id}';
     """

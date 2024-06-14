@@ -16,6 +16,11 @@ async def get_joined_events(access_token: Annotated[str, Header()]):
     user_id = validate_token_and_id(access_token)
     return EventService.get_all_joined_event(user_id)
 
+@user_event_router.get('/liked', response_model=response_schema.UserEventList)
+async def get_joined_events(access_token: Annotated[str, Header()]):
+    user_id = validate_token_and_id(access_token)
+    return EventService.get_all_liked_event(user_id)
+
 @user_event_router.get('/{event_id}', response_model=response_schema.UserEvent)
 async def get_event_by_id(event_id: str, access_token: Annotated[str, Header()]):
     user_id = validate_token_and_id(access_token)
