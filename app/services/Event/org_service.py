@@ -136,7 +136,7 @@ def post_event(event: request_schema.Event, profile_picture:str, organization_id
         conn.rollback()
         print(f"An error occurred: {e}")
 
-def update_event(event_id:str, event: request_schema.Event, profile_picture:str | None, organization_id: str):
+def update_event(event_id:str, event: request_schema.Event, profile_picture:str, organization_id: str):
     cur.execute(f"SELECT * FROM events WHERE organization_id='{organization_id}' AND event_id='{event_id}';")
     cur_event = cur.fetchone()
 
