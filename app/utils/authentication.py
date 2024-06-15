@@ -49,12 +49,18 @@ def authenticate_user(username: str, password: str):
             temp_data = user_data
             data = [{
                 "sub": user_data['user_id'],
+                "name": user_data['name'],
+                "username": user_data['username'],
+                "is_new_user": user_data['is_new_user']
             }, "user"]
 
         elif org_data:
             temp_data = org_data
             data = [{
             "sub": org_data['organization_id'],
+            "name": user_data['name'],
+            "username": user_data['username'],
+            "is_new_user": user_data['is_new_user']
             }, "organization"]
 
         if not verify_password(password, temp_data['password']):
