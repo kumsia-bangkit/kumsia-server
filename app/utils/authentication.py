@@ -90,17 +90,54 @@ def get_user_from_id(user_id: str):
     cursor = conn.cursor()
     try:
         cursor.execute(
-            "SELECT * FROM users WHERE user_id=%s", (user_id,)
+            """SELECT 
+                u.user_id,
+                u.preference_id,
+                u.username,
+                u.name,
+                u.email,
+                u.contact,
+                u.guardian_contact,
+                u.profile_picture,
+                u.religion,
+                u.gender,
+                u.dob,
+                u.city,
+                u.last_activity,
+                u.is_new_user,
+                p.hobby AS preference_hobby,
+                p.religion AS preference_religion,
+                p.city AS preference_city,
+                p.gender AS preference_gender
+                FROM users u
+                LEFT JOIN preference p ON u.preference_id = p.preference_id
+                WHERE u.user_id = %s;
+            """,
+            (user_id,)
         )
-        temp_data = cursor.fetchone()
-        user_data = {
-            "user_id": temp_data['user_id'],
-            "username": temp_data['username'],
-            "gender": temp_data['gender'],
-        }
+        user_data = cursor.fetchone()
         return user_data
     except Exception as err:
         show_responses("User Not Found", 404, error=err)
+
+def get_org_from_id(org_id: str):
+    conn = create_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute(
+            """SELECT
+                organization_id, name, username,
+                email, profile_picture, contact,
+                description, is_new_user
+                FROM organization
+                WHERE organization_id = %s;
+            """,
+            (org_id,)
+        )
+        org_data = cursor.fetchone()
+        return org_data
+    except Exception as err:
+        show_responses("Organization Not Found", 404, error=err)
 
 def validate_token(token: str):
     try:
@@ -124,6 +161,11 @@ def validate_token_and_id(token: str):
 
 def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
     payload = validate_token(token)
-    user_id: str = payload.get('sub')
-    user_data = get_user_from_id(user_id)
-    return user_data
+    id: str = payload.get('sub')
+
+    if payload.get('role') == "user":
+        user_data = get_user_from_id(id)
+        return user_data
+    elif payload.get('role') == "organization":
+        org_data = get_org_from_id(id)
+        return org_data
