@@ -1,6 +1,8 @@
 import os
 from google.cloud import storage
 
+# os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = os.getenv("GCP_CREDENTIALS")
+
 class GCStorage:
     def __init__(self):
         self.storage_client = storage. Client()

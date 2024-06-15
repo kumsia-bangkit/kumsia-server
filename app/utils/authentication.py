@@ -31,27 +31,44 @@ def authenticate_user(username: str, password: str):
             WHERE username=%s   
             """, (username,)
         )
-        temp_data = cursor.fetchone()
-        if not temp_data:
+        user_data = cursor.fetchone()
+
+        cursor.execute(
+            """
+            SELECT * 
+            FROM organization
+            WHERE username=%s   
+            """, (username,)
+        )
+        org_data = cursor.fetchone()
+
+        if not user_data and not org_data:
             return show_responses("User not found", 404)
 
-        user_data = {
-            "sub": temp_data['user_id'],
-        }
-        db_username = temp_data['username']
-        if username != db_username:
-            return False
+        if user_data:
+            temp_data = user_data
+            data = [{
+                "sub": user_data['user_id'],
+            }, "user"]
+
+        elif org_data:
+            temp_data = org_data
+            data = [{
+            "sub": org_data['organization_id'],
+            }, "organization"]
+
         if not verify_password(password, temp_data['password']):
             return show_responses("Incorrect Password", 401)
+        
         conn.close()
-        return user_data
+        return data
     except Exception as err:
         return show_responses("Failed when finding users", 401, error=err)
     
-def create_access_token(user_data: dict):
+def create_access_token(user_data: dict, role: str):
     encode_data = user_data.copy()
     expire = datetime.now() + timedelta(days=int(ACCESS_TOKEN_EXPIRE_DAYS))
-    encode_data.update({"exp": expire})
+    encode_data.update({"exp": expire, "role": role})
     jwt_token = jwt.encode(encode_data, SECRET_KEY, algorithm=ALGORITHM)
     return jwt_token
 
