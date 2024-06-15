@@ -22,7 +22,7 @@ async def register(request: request_schema.CreateUser):
     register_response = AuthService.register(request)
     return register_response
 
-@auth_router.post('/organization/register', tags=['Authentication'])
+@auth_router.post('/register/organization', tags=['Authentication'])
 async def register_organization(request: request_schema.CreateOrganization):
     register_organization_response = AuthService.register_organization(request)
     return register_organization_response
