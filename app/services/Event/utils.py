@@ -13,42 +13,9 @@ def create_preference(preference: request_schema.Preference):
             %s, %s, %s, %s, %s
         ) RETURNING preference_id;
         """
-    
-    hobby = None
-    religion = None
-    city = None
-    gender = None
-    
-    if preference.hobby:
-        hobby = '{'
-        for hobby_item in preference.hobby:
-            hobby += f'\"{hobby_item}\"'
-
-        hobby += '}'
-
-    if preference.religion:
-        religion = '{'
-        for religion_item in preference.religion:
-            religion += f'\"{religion_item}\"'
-
-        religion += '}'
-
-    if preference.city:
-        city = '{'
-        for city_item in preference.city:
-            city += f'\"{city_item}\"'
-
-        city += '}'
-
-    if preference.gender:
-        gender = '{'
-        for gender_item in preference.gender:
-            gender += f'\"{gender_item.value}\"'
-
-        gender += '}'
 
     preference_data = (
-        str(uuid.uuid4()), hobby, religion, city, gender
+        str(uuid.uuid4()), preference.hobby, preference.religion, preference.city, preference.gender
     )
 
     try:
@@ -73,41 +40,9 @@ def update_preference(preference: request_schema.Preference, preference_id: str)
         WHERE preference_id = %s
         RETURNING preference_id;
         """
-    hobby = None
-    religion = None
-    city = None
-    gender = None
-
-    if preference.hobby:
-        hobby = '{'
-        for hobby_item in preference.hobby:
-            hobby += f'\"{hobby_item}\"'
-
-        hobby += '}'
-
-    if preference.religion:
-        religion = '{'
-        for religion_item in preference.religion:
-            religion += f'\"{religion_item}\"'
-
-        religion += '}'
-
-    if preference.city:
-        city = '{'
-        for city_item in preference.city:
-            city += f'\"{city_item}\"'
-
-        city += '}'
-
-    if preference.gender:
-        gender = '{'
-        for gender_item in preference.gender:
-            gender += f'\"{gender_item.value}\"'
-
-        gender += '}'
 
     preference_data = (
-        hobby, religion, city, gender, preference_id
+        preference.hobby, preference.religion, preference.city, preference.gender, preference_id
     )
 
     try:
