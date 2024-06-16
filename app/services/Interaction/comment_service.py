@@ -8,9 +8,11 @@ cur = conn.cursor()
 
 def get_all_by_event(event_id: str):
     get_query = f"""
-        SELECT *
+        SELECT c.*, u.name AS user_name, u.profile_picture AS user_picture
         FROM 
-            comment_table
+            comment_table c
+        JOIN
+            users u ON c.user_id = u.user_id
         WHERE 
             event_id = '{event_id}';
     """
@@ -39,10 +41,7 @@ def post_comment(comment: request_schema.Comment, user_id: str):
         cur.execute(insert_query, comment_data)
         conn.commit()
 
-        new_comment = cur.fetchone()
-
-        if new_comment:
-            return response_schema.Comment(**new_comment)
+        return JSONResponse({"message": f"Comment is sent"}, status_code=200)
         
     except Exception as e:
         conn.rollback()

@@ -4,6 +4,8 @@ from typing import List, Optional
 class Comment(BaseModel):
     comment_id: Optional[str]
     user_id: Optional[str]
+    user_name: Optional[str]
+    user_picture: Optional[str]
     event_id: Optional[str]
     comment_text: Optional[str]
 
