@@ -34,6 +34,7 @@ class OrganizationEventList(BaseModel):
 class UserEvent(BaseModel):
     event_id: Optional[str]
     organization_id: Optional[str]
+    organization_name: Optional[str]
     name: Optional[str]
     location: Optional[str]
     profie_picture: Optional[str]
