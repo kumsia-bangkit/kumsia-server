@@ -1,6 +1,4 @@
 import uuid
-
-from . import response_schema as Response
 from fastapi.responses import JSONResponse
 from app.utils.database import create_connection
 from app.utils.authentication import get_password_hash
