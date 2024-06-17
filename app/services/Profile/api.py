@@ -35,8 +35,7 @@ async def update_profile(
     
         file_path = GCStorage().upload_file(file)
 
-    update_profile_response = ProfileServices.update_user_profile(request, payload.get("sub"), payload.get("username"), file_path)
-    return update_profile_response
+    return ProfileServices.update_user_profile(request, payload.get("sub"), payload.get("username"), file_path)
 
 @profile_router.delete('/user/delete')
 async def delete_profile(

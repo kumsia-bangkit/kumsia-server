@@ -18,6 +18,7 @@ class UpdateProfile(BaseModel):
     religion_preference: Optional[list]
     city_preference: Optional[list]
     gender_preference: Optional[list[Gender]]
+    password: Optional[str]
 
     @model_validator(mode='before')
     @classmethod
