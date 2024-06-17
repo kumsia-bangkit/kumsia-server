@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from app.services.Authentication.api import auth_router
+from app.services.Profile.api import profile_router
 from fastapi.middleware.cors import CORSMiddleware
 from app.services.Event.org_api import org_event_router
 from app.services.Event.user_api import user_event_router
@@ -25,6 +26,7 @@ app.include_router(comment_router)
 app.include_router(like_router)
 app.include_router(master_data_router)
 app.include_router(friend_router)
+app.include_router(profile_router)
 
 @app.get("/")
 def read_hello():
