@@ -1,5 +1,5 @@
 import datetime
-import request_schema
+from . import request_schema, response_schema
 from app.services.Event.utils import update_preference
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
@@ -20,7 +20,9 @@ def get_user_profile(id):
         temp_data = cursor.fetchone()
         data = jsonable_encoder(temp_data)
         conn.close()
-        return JSONResponse({"data": data}, status_code=200)
+        user_detail = response_schema.ProfileDetail(**data)
+        user_detail_dict = user_detail.dict()
+        return JSONResponse({"data": user_detail_dict }, status_code=200)
     except Exception as err:
         show_responses("Failed to get users information", 404, error=err)
 
@@ -38,7 +40,9 @@ def get_org_profile(id):
         temp_data = cursor.fetchone()
         data = jsonable_encoder(temp_data)
         conn.close()
-        return JSONResponse({"data": data}, status_code=200)
+        org_detail = response_schema.OrganizationDetail(**data)
+        org_detail_dict = org_detail.dict()
+        return JSONResponse({"data": org_detail_dict}, status_code=200)
     except Exception as err:
         show_responses("Failed to get organization information", 404, error=err)
 
@@ -87,6 +91,23 @@ def update_user_profile(request, id):
 def update_org_profile(request, id):
     conn = create_connection()
     cursor = conn.cursor()
+    try:
+        cursor.execute(
+            """
+            SELECT is_new_user
+            FROM organization
+            WHERE organization_id=%s
+            """, (id,)
+        )
+        temp_fetch = cursor.fetchone()
+        is_new = temp_fetch['is_new_user']
+        if is_new == False:
+            return show_responses("Only new user can update profile", 401)
+        else:
+            pass
+    except Exception as err:
+        return show_responses("Failed to update organization profile", 404, error=err)
+    
     username = request.username
     user_exists = find_duplicate_data("users", "username", username.lower())
     org_exists = find_duplicate_data("organization", "username", username.lower())

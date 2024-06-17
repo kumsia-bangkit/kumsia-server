@@ -16,3 +16,11 @@ class ProfileDetail(BaseModel):
     dob: Optional[date] = Field(date(2000, 1, 1), description="The date of birth of the user")
     city: Optional[str] = Field("Kota Bogor", description="The city where the user resides")
     last_activity: Optional[datetime] = Field(default_factory=datetime.utcnow, description="The timestamp of the user's last activity")
+
+class OrganizationDetail(BaseModel):
+    name: Optional[str] = Field("John Doe", description="The full name of the user")
+    username: Optional[str] = Field("default_username", description="The unique username of the user")
+    email: Optional[str] = Field("default@example.com", description="The email address of the user")
+    profile_picture: Optional[str] = Field("default_picture.jpg", description="URL to the user's profile picture")
+    description: Optional[str] = Field(None, examples=['Test Desc'])
+    contact: Optional[str] = Field("0000000000", description="The contact number of the user")
