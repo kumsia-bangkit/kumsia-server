@@ -13,11 +13,20 @@ def register(request):
     if user_exists or org_exists:
         return JSONResponse({"messagge": f"username {request.username} has been taken"}, status_code=406)
     try:
+        preference_id = str(uuid.uuid4())
+        try:
+            cursor.execute(
+                """
+                INSERT INTO preference (preference_id) VALUES (%s)
+                """, (preference_id,)
+            )
+        except Exception as err:
+            return JSONResponse({"message": "Failed creating an user's preference", "err": err}, status_code=500)
         cursor.execute(
             """
-            INSERT INTO users (user_id, username, email, password, name, dob, gender)
-            VALUES(%s, %s, %s, %s, %s, %s, %s)
-            """, (str(uuid.uuid4()), username.lower(), request.email, get_password_hash(request.password), request.name, request.dob, request.gender)
+            INSERT INTO users (user_id, preference_id, username, email, password, name, dob, gender)
+            VALUES(%s, %s, %s, %s, %s, %s, %s, %s)
+            """, (str(uuid.uuid4()), preference_id, username.lower(), request.email, get_password_hash(request.password), request.name, request.dob, request.gender)
         )
         conn.commit()
         conn.close()

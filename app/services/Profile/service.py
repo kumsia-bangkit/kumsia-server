@@ -9,20 +9,43 @@ from app.utils.utility import show_responses, find_duplicate_data
 def get_user_profile(id):
     conn = create_connection()
     cursor = conn.cursor()
-    try: 
+    try:
         cursor.execute(
             """
             SELECT *
             FROM users
-            WHERE user_id=%s 
-            """,(id,)
+            WHERE user_id=%s
+            """, (id,)
         )
         temp_data = cursor.fetchone()
+        if not temp_data:
+            raise ValueError("User not found")
         data = jsonable_encoder(temp_data)
+
+        try:
+            cursor.execute(
+            """
+            SELECT hobby, religion, city, gender
+            FROM preference
+            WHERE preference_id = %s
+            """, (data['preference_id'],)
+            )
+            preference_data = cursor.fetchone()
+            
+            preference_dict = {
+                "hobby": preference_data['hobby'],
+                "religion": preference_data['religion'],
+                "city": preference_data['city'],
+                "gender": preference_data['gender']
+            }
+            data["preference"] = preference_dict
+        except Exception as err:
+            show_responses("Failed to get users information", 404, error=err)
+
         conn.close()
         user_detail = response_schema.ProfileDetail(**data)
         user_detail_dict = user_detail.dict()
-        return JSONResponse({"data": user_detail_dict }, status_code=200)
+        return JSONResponse({"data": user_detail_dict}, status_code=200)
     except Exception as err:
         show_responses("Failed to get users information", 404, error=err)
 
@@ -55,6 +78,19 @@ def update_user_profile(request, id):
     if user_exists or org_exists:
         return JSONResponse({"messagge": f"username {request.username} has been taken"}, status_code=406)
     
+    preference_id = None
+    try:
+        cursor.execute(
+            """
+            SELECT preference_id
+            FROM users
+            WHERE user_id=%s
+            """, (id,)
+        )
+        data = cursor.fetchone()
+        preference_id = data['preference_id']
+    except Exception as err:
+        show_responses("Failed get user preferences", 401, error=err)
     try:
         preference = request_schema.Preference(
             hobby=request.hobby_preference,
@@ -62,7 +98,7 @@ def update_user_profile(request, id):
             city=request.city_preference,
             gender=request.gender_preference
         )
-        # update_preference(preference, row["preference_id"])
+        update_preference(preference, preference_id)
         
         cursor.execute(
             """
