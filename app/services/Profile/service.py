@@ -1,4 +1,4 @@
-from app.utils.authentication import create_access_token, verify_password
+from app.utils.authentication import create_access_token, verify_password, get_password_hash
 from . import request_schema, response_schema
 from app.services.Event.utils import update_preference
 from fastapi.responses import JSONResponse
@@ -128,6 +128,8 @@ def update_user_profile(request, id, current_usn, picture):
         )
         data = cursor.fetchone()
 
+        request.password = request.password if request.password else ""
+
         if not data.get("is_new_user") and not verify_password(request.password, data.get("password")):
             return JSONResponse({"messagge": f"Incorrect password"}, status_code=406)
 
@@ -143,12 +145,17 @@ def update_user_profile(request, id, current_usn, picture):
         )
         update_preference(preference, preference_id)
         
+        new_pass = None
+        if request.new_password:
+            new_pass = get_password_hash(request.new_password)
+
         cursor.execute(
             """
             UPDATE users SET
             username = COALESCE(%s, username),
             name = COALESCE(%s, name),
             email = COALESCE(%s, email),
+            password = COALESCE(%s, password),
             contact = COALESCE(%s, contact),
             guardian_contact = COALESCE(%s, guardian_contact),
             religion = COALESCE(%s, religion),  
@@ -159,7 +166,7 @@ def update_user_profile(request, id, current_usn, picture):
             is_new_user = %s
             WHERE user_id = %s
             RETURNING *;
-            """, (request.username, request.name, request.email, request.contact, 
+            """, (request.username, request.name, request.email, new_pass, request.contact, 
                   request.guardian_contact, request.religion, 
                   request.gender, request.dob, request.city, picture, False, id)
         )
