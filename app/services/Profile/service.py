@@ -1,53 +1,91 @@
-import datetime
-
 from app.utils.authentication import create_access_token
 from . import request_schema, response_schema
 from app.services.Event.utils import update_preference
-from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from app.utils.database import create_connection
 from app.utils.utility import show_responses, find_duplicate_data
 
-def get_user_profile(id):
+def get_profile(id):
     conn = create_connection()
     cursor = conn.cursor()
     try:
         cursor.execute(
             """
-            SELECT *
-            FROM users
+            SELECT u.*,
+                p.hobby AS preference_hobby,
+                p.religion AS preference_religion,
+                p.city AS preference_city,
+                p.gender AS preference_gender
+            FROM users u
+            LEFT JOIN preference p ON u.preference_id = p.preference_id
             WHERE user_id=%s
             """, (id,)
         )
         temp_data = cursor.fetchone()
         if not temp_data:
-            raise ValueError("User not found")
-        data = jsonable_encoder(temp_data)
-
-        try:
-            cursor.execute(
-            """
-            SELECT hobby, religion, city, gender
-            FROM preference
-            WHERE preference_id = %s
-            """, (data['preference_id'],)
-            )
-            preference_data = cursor.fetchone()
-            
-            preference_dict = {
-                "hobby": preference_data.get('hobby'),
-                "religion": preference_data.get('religion'),
-                "city": preference_data.get('city'),
-                "gender": preference_data.get('gender')
-            }
-            data["preference"] = preference_dict
-        except Exception as err:
             show_responses("Failed to get users information", 404, error=err)
 
         conn.close()
-        user_detail = response_schema.ProfileDetail(**data)
-        user_detail_dict = user_detail.dict()
-        return JSONResponse({"data": user_detail_dict}, status_code=200)
+        return response_schema.ProfileDetail(**temp_data)
+    except Exception as err:
+        show_responses("Failed to get users information", 404, error=err)
+
+def get_user_profile(user_id, id, role):
+    conn = create_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute(
+            """
+            SELECT u.*,
+                p.hobby AS preference_hobby,
+                p.religion AS preference_religion,
+                p.city AS preference_city,
+                p.gender AS preference_gender
+            FROM users u
+            LEFT JOIN preference p ON u.preference_id = p.preference_id
+            WHERE user_id=%s
+            """, (user_id,)
+        )
+
+        user = cursor.fetchone()
+
+        if user and role == "user":
+            cursor.execute(
+                f"""
+                SELECT *
+                FROM friend
+                WHERE status = TRUE and 
+                    (first_party_id = '{user_id}' and second_party_id = '{id}')
+                    or (first_party_id = '{id}' and second_party_id = '{user_id}');
+                """
+            )
+
+            friend = cursor.fetchone()
+
+            if not friend:
+                user["contact"] = None
+                user["guardian_contact"] = None
+
+        elif user and role == "organization":
+            cursor.execute(
+                f"""
+                SELECT *
+                FROM joined_event je
+                JOIN
+                    events e ON e.event_id = je.event_id
+                WHERE je.user_id = '{user_id}' AND e.organization_id = '{id}';
+                """
+            )
+
+            joined = cursor.fetchall()
+
+            if not joined:
+                user["contact"] = None
+                user["guardian_contact"] = None
+
+        conn.close()
+        return response_schema.ProfileDetail(**user)
+
     except Exception as err:
         show_responses("Failed to get users information", 404, error=err)
 
@@ -63,11 +101,8 @@ def get_org_profile(id):
             """,(id,)
         )
         temp_data = cursor.fetchone()
-        data = jsonable_encoder(temp_data)
         conn.close()
-        org_detail = response_schema.OrganizationDetail(**data)
-        org_detail_dict = org_detail.dict()
-        return JSONResponse({"data": org_detail_dict}, status_code=200)
+        return response_schema.OrganizationDetail(**temp_data)
     except Exception as err:
         show_responses("Failed to get organization information", 404, error=err)
 
