@@ -1,4 +1,6 @@
 import datetime
+
+from app.utils.authentication import create_access_token
 from . import request_schema, response_schema
 from app.services.Event.utils import update_preference
 from fastapi.encoders import jsonable_encoder
@@ -33,10 +35,10 @@ def get_user_profile(id):
             preference_data = cursor.fetchone()
             
             preference_dict = {
-                "hobby": preference_data['hobby'],
-                "religion": preference_data['religion'],
-                "city": preference_data['city'],
-                "gender": preference_data['gender']
+                "hobby": preference_data.get('hobby'),
+                "religion": preference_data.get('religion'),
+                "city": preference_data.get('city'),
+                "gender": preference_data.get('gender')
             }
             data["preference"] = preference_dict
         except Exception as err:
@@ -69,14 +71,16 @@ def get_org_profile(id):
     except Exception as err:
         show_responses("Failed to get organization information", 404, error=err)
 
-def update_user_profile(request, id):
+def update_user_profile(request, id, current_usn, picture):
     conn = create_connection()
     cursor = conn.cursor()
     username = request.username
-    user_exists = find_duplicate_data("users", "username", username.lower())
-    org_exists = find_duplicate_data("organization", "username", username.lower())
-    if user_exists or org_exists:
-        return JSONResponse({"messagge": f"username {request.username} has been taken"}, status_code=406)
+
+    if username != current_usn and username != None:
+        user_exists = find_duplicate_data("users", "username", username.lower())
+        org_exists = find_duplicate_data("organization", "username", username.lower())
+        if user_exists or org_exists:
+            return JSONResponse({"messagge": f"username {request.username} has been taken"}, status_code=406)
     
     preference_id = None
     try:
@@ -112,19 +116,32 @@ def update_user_profile(request, id):
             gender = COALESCE(%s, gender),
             dob = COALESCE(%s, dob),
             city = COALESCE(%s, city),
+            profile_picture = COALESCE(%s, profile_picture),
             is_new_user = %s
             WHERE user_id = %s
+            RETURNING *;
             """, (request.username, request.name, request.email, request.contact, 
                   request.guardian_contact, request.religion, 
-                  request.gender, request.dob, request.city, False, id)
+                  request.gender, request.dob, request.city, picture, False, id)
         )
         conn.commit()
+
+        new_data = cursor.fetchone()
+
+        data = [{
+            "sub": new_data['user_id'],
+            "name": new_data['name'],
+            "username": new_data['username'],
+            "is_new_user": new_data['is_new_user']
+            }, "organization"]
+        
+        new_token = create_access_token(data[0], data[1])
         conn.close()
-        return show_responses("Profile Updated", 200)
+        return response_schema.Token(access_token=new_token)
     except Exception as err:
         show_responses("Failed update users profile", 404, error=err)
 
-def update_org_profile(request, id):
+def update_org_profile(request, id, current_usn, picture):
     conn = create_connection()
     cursor = conn.cursor()
     try:
@@ -145,10 +162,11 @@ def update_org_profile(request, id):
         return show_responses("Failed to update organization profile", 404, error=err)
     
     username = request.username
-    user_exists = find_duplicate_data("users", "username", username.lower())
-    org_exists = find_duplicate_data("organization", "username", username.lower())
-    if user_exists or org_exists:
-        return JSONResponse({"messagge": f"username {request.username} has been taken"}, status_code=406)
+    if username != current_usn and username != None:
+        user_exists = find_duplicate_data("users", "username", username.lower())
+        org_exists = find_duplicate_data("organization", "username", username.lower())
+        if user_exists or org_exists:
+            return JSONResponse({"messagge": f"username {request.username} has been taken"}, status_code=406)
     try:
         cursor.execute(
             """
@@ -158,14 +176,27 @@ def update_org_profile(request, id):
             email = COALESCE(%s, email),
             description = COALESCE(%s, description),
             contact = COALESCE(%s, contact),
+            profile_picture = COALESCE(%s, profile_picture),
             is_new_user = %s
             WHERE organization_id = %s
+            RETURNING *;
             """, (request.name, request.username, request.email, 
-                  request.description, request.contact, False, id)
+                  request.description, request.contact, picture, False, id)
         )
         conn.commit()
+        new_data = cursor.fetchone()
+
+        data = [{
+            "sub": new_data['organization_id'],
+            "name": new_data['name'],
+            "username": new_data['username'],
+            "is_new_user": new_data['is_new_user']
+            }, "organization"]
+        
+        new_token = create_access_token(data[0], data[1])
+
         conn.close()
-        return show_responses("Profile Updated", 200)
+        return response_schema.Token(access_token=new_token)
     except Exception as err:
         return show_responses("Failed to update organization profile", 404, error=err)
     
