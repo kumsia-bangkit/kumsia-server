@@ -1,4 +1,4 @@
-from app.utils.authentication import create_access_token
+from app.utils.authentication import create_access_token, verify_password
 from . import request_schema, response_schema
 from app.services.Event.utils import update_preference
 from fastapi.responses import JSONResponse
@@ -121,12 +121,16 @@ def update_user_profile(request, id, current_usn, picture):
     try:
         cursor.execute(
             """
-            SELECT preference_id
+            SELECT *
             FROM users
             WHERE user_id=%s
             """, (id,)
         )
         data = cursor.fetchone()
+
+        if not data.get("is_new_user") and not verify_password(request.password, data.get("password")):
+            return JSONResponse({"messagge": f"Incorrect password"}, status_code=406)
+
         preference_id = data['preference_id']
     except Exception as err:
         show_responses("Failed get user preferences", 401, error=err)
