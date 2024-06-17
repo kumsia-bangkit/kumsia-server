@@ -1,15 +1,6 @@
 from pydantic import BaseModel, Field
 from datetime import date, datetime
 from typing import Optional
-from app.enums.enum import Gender
-class ProfileUpdated(BaseModel):
-    message: Optional[str] = Field(None, description="Message given after profile updated")
-    
-class Preference(BaseModel):
-    hobby: Optional[list]
-    religion: Optional[list]
-    city: Optional[list]
-    gender: Optional[list[Gender]]
     
 class ProfileDetail(BaseModel):
     user_id: Optional[str]
@@ -21,10 +12,13 @@ class ProfileDetail(BaseModel):
     profile_picture: Optional[str] = Field("default_picture.jpg", description="URL to the user's profile picture")
     religion: Optional[str] = Field("Hindu", description="The religion of the user")
     gender: Optional[str] = Field("Male", description="The gender of the user")
-    dob: Optional[str] = Field("User DOB", description="The date of birth of the user")
+    dob: Optional[date] = Field("User DOB", description="The date of birth of the user")
     city: Optional[str] = Field("Kota Bogor", description="The city where the user resides")
     last_activity: Optional[datetime] = Field(default_factory=datetime.utcnow, description="The timestamp of the user's last activity")
-    preference: Optional[Preference]
+    preference_hobby: Optional[list]
+    preference_religion: Optional[list]
+    preference_city: Optional[list]
+    preference_gender: Optional[list]
 
 class OrganizationDetail(BaseModel):
     organization_id: Optional[str]
