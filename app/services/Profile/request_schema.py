@@ -10,8 +10,8 @@ class UpdateProfile(BaseModel):
     email: Optional[str] = Field(None, examples=['john.alexander@gmail.com'], description="New user's email")
     contact: Optional[str] = Field(None, examples=['08121283981'], description="New user's contact")
     guardian_contact: Optional[str] = Field(None, examples=['08121283981'], description="New user's guardian contact")
-    religion: Optional[Religion] = Field(None, examples=[Religion.Hindu], description="Requested religion changes")
-    gender: Optional[Gender] = Field(None, examples=[Gender.Male], description="Requested gender changes")
+    religion: Optional[Religion] = Field(None, examples=[Religion.HINDUISM], description="Requested religion changes")
+    gender: Optional[Gender] = Field(None, examples=[Gender.MALE], description="Requested gender changes")
     dob: Optional[date] = Field(None, examples=['2000-01-01'], description="User's birthday date")
     city: Optional[str] = Field(None, examples=['Kota Tangerang'], description="User's chosen city")
     hobby_preference: Optional[list]
