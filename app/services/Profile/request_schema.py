@@ -1,6 +1,7 @@
 import json
 from pydantic import BaseModel, Field, model_validator
-from app.enums.enum import Gender, Religion
+from app.enums.gender import Gender
+from app.enums.religion import Religion
 from datetime import date
 from typing import Optional
 class UpdateProfile(BaseModel):
