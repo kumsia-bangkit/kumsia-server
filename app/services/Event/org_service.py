@@ -190,12 +190,13 @@ def update_event(event_id:str, event: request_schema.Event, profile_picture:str,
 
         update_query = """
             UPDATE events 
-            SET location = %s, type = %s, link = %s,
+            SET city = %s, location = %s, type = %s, link = %s,
             description = %s, last_edited = %s
             WHERE organization_id = %s AND event_id = %s
             RETURNING event_id;
             """
 
+        city = event.city
         location = event.location
         type = event.type
         link = event.link
@@ -203,7 +204,7 @@ def update_event(event_id:str, event: request_schema.Event, profile_picture:str,
         last_edited = datetime.now().isoformat()
 
         event_data = (
-            location, type, link, description,
+            city, location, type, link, description,
             last_edited, str(organization_id), str(event_id)
         )
         
