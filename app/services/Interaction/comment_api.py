@@ -2,11 +2,11 @@ from typing import Annotated
 from fastapi import APIRouter, Header
 
 from app.utils.authentication import validate_token_and_id
-from . import request_schema, comment_service as CommentService
+from . import request_schema, response_schema, comment_service as CommentService
 
 comment_router = APIRouter(prefix="/comment", tags=['Comment'])
 
-@comment_router.get('/all')
+@comment_router.get('/all', response_model=response_schema.CommentList)
 async def get_all_by_event(event_id: str):
     return CommentService.get_all_by_event(event_id)
 

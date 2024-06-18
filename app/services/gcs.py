@@ -13,4 +13,4 @@ class GCStorage:
         file_path = file.filename
         blob = bucket.blob(file_path)
         blob.upload_from_file(file.file, content_type='image/jpeg')
-        return f'https://storage.cloud.google.com/{self.bucket_name}/{file_path}'
+        return f'https://storage.googleapis.com/{self.bucket_name}/{file_path}'

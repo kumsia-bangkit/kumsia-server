@@ -14,6 +14,7 @@ def get_all(user_id: str):
         SELECT 
             e.event_id, 
             e.organization_id, 
+            o.name AS organization_name,
             e.name, 
             e.location, 
             e.profie_picture, 
@@ -43,6 +44,8 @@ def get_all(user_id: str):
             p.gender AS gender_preference
         FROM 
             events e
+        JOIN
+            organization o ON e.organization_id = o.organization_id
         JOIN 
             preference p ON e.preference_id = p.preference_id
         LEFT JOIN 
@@ -62,6 +65,7 @@ def get_all_joined_event(user_id: str):
         SELECT 
             e.event_id, 
             e.organization_id, 
+            o.name AS organization_name,
             e.name, 
             e.location, 
             e.profie_picture, 
@@ -88,6 +92,8 @@ def get_all_joined_event(user_id: str):
             p.gender AS gender_preference
         FROM 
             events e
+        JOIN
+            organization o ON e.organization_id = o.organization_id
         JOIN 
             preference p ON e.preference_id = p.preference_id
         JOIN 
@@ -116,6 +122,7 @@ def get_all_liked_event(user_id: str):
         SELECT 
             e.event_id, 
             e.organization_id, 
+            o.name AS organization_name,
             e.name, 
             e.location, 
             e.profie_picture, 
@@ -142,6 +149,8 @@ def get_all_liked_event(user_id: str):
             p.gender AS gender_preference
         FROM 
             events e
+        JOIN
+            organization o ON e.organization_id = o.organization_id
         JOIN 
             preference p ON e.preference_id = p.preference_id
         JOIN 
@@ -165,6 +174,7 @@ def get_event_by_id(event_id: str, user_id: str):
         SELECT 
             e.event_id, 
             e.organization_id, 
+            o.name AS organization_name,
             e.name, 
             e.location, 
             e.profie_picture, 
@@ -194,6 +204,8 @@ def get_event_by_id(event_id: str, user_id: str):
             p.gender AS gender_preference
         FROM 
             events e
+        JOIN
+            organization o ON e.organization_id = o.organization_id
         JOIN 
             preference p ON e.preference_id = p.preference_id
         LEFT JOIN 
