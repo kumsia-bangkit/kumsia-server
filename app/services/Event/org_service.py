@@ -324,3 +324,16 @@ def cancel_event(event_id: str, organization_id: str):
     except Exception as e:
         conn.rollback()
         print(f"An error occurred: {e}")
+        
+def close_event():
+    conn = create_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute(
+            """
+            UPDATE events
+            WHERE 
+            """
+        )
+    except Exception as err:
+        return JSONResponse({"message": "Failed updating progress", "err": err}, status_code=400)

@@ -4,6 +4,7 @@ from fastapi.responses import JSONResponse
 from . import org_service as EventService, request_schema, response_schema
 from app.services.gcs import GCStorage
 from app.utils.authentication import validate_token_and_id
+from fastapi_utilities import repeat_at
 
 org_event_router = APIRouter(prefix="/events/org", tags=['Event Organization'])
 
@@ -57,3 +58,9 @@ async def submit_event(event_id: str, access_token: Annotated[str, Header()]):
 async def cancel_event(event_id: str, access_token: Annotated[str, Header()]):
     org_id = validate_token_and_id(access_token)
     return EventService.cancel_event(event_id, org_id)
+
+@org_event_router.on_event("startup")
+@repeat_at(cron="*/2 * * * *")
+async def close_event():
+    close_event_response = EventService.close_event()
+    return close_event_response
