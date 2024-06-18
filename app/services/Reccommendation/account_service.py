@@ -1,14 +1,9 @@
-import uuid
-from app.services.MasterData.service import get_master_city, get_master_hobby
+from app.services.MasterData.service import get_master_hobby
 from app.utils.database import create_connection
-from app.utils.authentication import get_user_from_id
 from . import response_schema
 import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
 from sklearn.neighbors import NearestNeighbors
-from datetime import datetime, date
-from sklearn.preprocessing import LabelEncoder
+from datetime import datetime
 from sklearn.preprocessing import StandardScaler
 
 conn = create_connection()
@@ -16,38 +11,6 @@ cur = conn.cursor()
 
 def get_recommendation(user_id: str):
     # Get Non friends
-    f"""
-    SELECT * AS
-    FROM friends F
-    WHERE F.first_party_id != {user_id} OR F.secod_party_id != {user_id}
-    """
-    """
-    SELECT * 
-    FROM users U
-    JOIN friend F ON U.user_id = F.first_party_id
-    LEFT JOIN preference P on U.preference_id = P.preference_id
-    WHERE F.first_party_id != 'd29a683e-ce09-438d-9c13-2e452d0ae4e6' OR F.second_party_id != 'd29a683e-ce09-438d-9c13-2e452d0ae4e6'
-    UNION
-    SELECT * 
-    FROM users U 
-    JOIN friend F ON U.user_id = F.second_party_id
-    LEFT JOIN preference P on U.preference_id = P.preference_id
-    WHERE F.first_party_id != 'd29a683e-ce09-438d-9c13-2e452d0ae4e6' OR F.second_party_id != 'd29a683e-ce09-438d-9c13-2e452d0ae4e6';
-    
-    """
-    """
-    SELECT * 
-    FROM users U
-    JOIN friend F ON U.user_id = F.first_party_id
-    LEFT JOIN preference P on U.preference_id = P.preference_id
-    UNION
-    SELECT * 
-    FROM users U 
-    JOIN friend F ON U.user_id = F.second_party_id
-    LEFT JOIN preference P on U.preference_id = P.preference_id
-
-    """
-    # d29a683e-ce09-438d-9c13-2e452d0ae4e6
     query = f"""
     SELECT * FROM (
     SELECT U.*, P.hobby
