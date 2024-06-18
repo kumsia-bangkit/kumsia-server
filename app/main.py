@@ -8,6 +8,7 @@ from app.services.Interaction.comment_api import comment_router
 from app.services.Interaction.like_api import like_router
 from app.services.MasterData.api import master_data_router
 from app.services.Friend.api import friend_router
+from app.services.Recommendation.api import recommendation_router
 
 app = FastAPI()
 app.add_middleware(
@@ -27,6 +28,7 @@ app.include_router(like_router)
 app.include_router(master_data_router)
 app.include_router(friend_router)
 app.include_router(profile_router)
+app.include_router(recommendation_router)
 
 @app.get("/")
 def read_hello():
