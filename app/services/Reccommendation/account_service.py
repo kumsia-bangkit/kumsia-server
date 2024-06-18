@@ -2,6 +2,7 @@ import uuid
 from app.services.MasterData.service import get_master_city, get_master_hobby
 from app.utils.database import create_connection
 from app.utils.authentication import get_user_from_id
+from . import response_schema
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -140,4 +141,15 @@ def get_recommendation(user_id: str):
     if n_neighbors > 5:
         top_n_user = top_n_user.sample(5)
 
-    return
+    recommended_users = []
+    for _, row in top_n_user.iterrows():
+        recommended_users.append(response_schema.User(user_id=row["user_id"],
+                                                      username=row["username"],
+                                                      name=row["name"],
+                                                      profile_picture=row["profile_picture"],
+                                                      religion=row["religion"],
+                                                      gender=row["gender"],
+                                                      city=row["city"]
+                                                    )
+                                )
+    return response_schema.UsersList(users=recommended_users)
