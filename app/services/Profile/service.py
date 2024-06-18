@@ -179,9 +179,9 @@ def update_user_profile(request, id, current_usn, picture):
             "name": new_data['name'],
             "username": new_data['username'],
             "is_new_user": new_data['is_new_user']
-            }, "users"]
+            }, "user"]
         
-        new_token = create_access_token(data[0], "users")
+        new_token = create_access_token(data[0], data[1])
         conn.close()
         return response_schema.Token(access_token=new_token)
     except Exception as err:
