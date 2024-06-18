@@ -109,10 +109,12 @@ def get_recommendation(user_id: str):
         recommended_users.append(response_schema.User(user_id=row["user_id"],
                                                       username=row["username"],
                                                       name=row["name"],
+                                                      dob=row["dob"],
                                                       profile_picture=row["profile_picture"],
                                                       religion=row["religion"],
                                                       gender=row["gender"],
-                                                      city=row["city"]
+                                                      city=row["city"],
+                                                      hobbies=row["hobby"],
                                                     )
                                 )
     return response_schema.UsersList(users=recommended_users)
