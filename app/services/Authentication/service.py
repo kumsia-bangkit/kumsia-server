@@ -24,9 +24,13 @@ def register(request):
             return JSONResponse({"message": "Failed creating an user's preference", "err": err}, status_code=500)
         cursor.execute(
             """
-            INSERT INTO users (user_id, preference_id, username, email, password, name, dob, gender)
-            VALUES(%s, %s, %s, %s, %s, %s, %s, %s)
-            """, (str(uuid.uuid4()), preference_id, username.lower(), request.email, get_password_hash(request.password), request.name, request.dob, request.gender)
+            INSERT INTO users (user_id, preference_id, username, email, password, name, dob, gender, profile_picture)
+            VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """,
+            (str(uuid.uuid4()), preference_id, username.lower(),
+            request.email, get_password_hash(request.password),
+            request.name, request.dob, request.gender,
+            "https://storage.googleapis.com/kumsia-storage/placeholder/user.jpg")
         )
         conn.commit()
         conn.close()
@@ -45,9 +49,11 @@ def register_organization(request):
     try:
         cursor.execute(
             """
-            INSERT INTO organization (organization_id, name, username, password, email)
-            VALUES(%s, %s, %s, %s, %s)
-            """, (str(uuid.uuid4()), request.name, username.lower(), get_password_hash(request.password), request.email)
+            INSERT INTO organization (organization_id, name, username, password, email, profile_picture)
+            VALUES(%s, %s, %s, %s, %s, %s)
+            """,
+            (str(uuid.uuid4()), request.name, username.lower(), get_password_hash(request.password), request.email,
+            "https://storage.googleapis.com/kumsia-storage/placeholder/organization.png")
         )
         conn.commit()
         conn.close()
