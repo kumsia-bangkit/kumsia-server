@@ -17,18 +17,18 @@ def get_recommendation(user_id: str):
     FROM users U
     JOIN friend F ON U.user_id = F.first_party_id
     LEFT JOIN preference P on U.preference_id = P.preference_id
-    WHERE F.first_party_id != {user_id} OR F.second_party_id != {user_id}
+    WHERE F.first_party_id != '{user_id}' OR F.second_party_id != '{user_id}'
     UNION
     SELECT U.*, P.hobby 
     FROM users U 
     JOIN friend F ON U.user_id = F.second_party_id
     LEFT JOIN preference P on U.preference_id = P.preference_id
-    WHERE F.first_party_id != {user_id} OR F.second_party_id != {user_id}
+    WHERE F.first_party_id != '{user_id}' OR F.second_party_id != '{user_id}'
     UNION
     SELECT U.*, P.hobby
     FROM users U 
     LEFT JOIN preference P on U.preference_id = P.preference_id
-    WHERE U.user_id = {user_id}
+    WHERE U.user_id = '{user_id}'
     )
     ORDER BY user_id;
     """
@@ -41,7 +41,7 @@ def get_recommendation(user_id: str):
     SELECT P.hobby, P.gender, P.city, P.religion
     FROM users U
     JOIN preference P on U.preference_id = P.preference_id
-    WHER u.user_id = {user_id}
+    WHER u.user_id = '{user_id}'
     """
     cur.execute(query)
     user_preference = cur.fetchone()
