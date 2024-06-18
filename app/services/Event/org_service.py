@@ -331,9 +331,13 @@ def close_event():
     try:
         cursor.execute(
             """
-            UPDATE events
-            WHERE 
+            UPDATE event
+            SET status = 'closed'
+            WHERE event_start < NOW();
             """
         )
+        conn.commit()
+        conn.close()
+        return JSONResponse({"message": "Progress Updated"}, status_code=200)
     except Exception as err:
         return JSONResponse({"message": "Failed updating progress", "err": err}, status_code=400)
