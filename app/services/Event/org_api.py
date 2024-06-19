@@ -23,7 +23,7 @@ async def get_event_by_id(event_id: str, access_token: Annotated[str, Header()])
 @org_event_router.post('/new', response_model=response_schema.OrganizationEvent)
 async def post_event(access_token: Annotated[str, Header()], file:UploadFile = File(None), event:request_schema.Event=Form(...)):
     org_id = validate_token_and_id(access_token)
-    file_path = "https://storage.cloud.google.com/kumsia-storage/placeholder/event.jpg"
+    file_path = "https://storage.googleapis.com/kumsia-storage/placeholder/event.jpg"
     if file:
         if file.content_type not in ALLOWED_IMAGE_TYPES:
             return JSONResponse({"message": "Invalid file type. Only JPEG, JPG, PNG, and GIF files are allowed."}, status_code=400)

@@ -1,4 +1,4 @@
-from app.utils.authentication import create_access_token
+from app.utils.authentication import create_access_token, verify_password, get_password_hash
 from . import request_schema, response_schema
 from app.services.Event.utils import update_preference
 from fastapi.responses import JSONResponse
@@ -24,6 +24,8 @@ def get_profile(id):
         temp_data = cursor.fetchone()
         if not temp_data:
             show_responses("Failed to get users information", 404, error=err)
+
+        temp_data["is_friends"] = True
 
         conn.close()
         return response_schema.ProfileDetail(**temp_data)
@@ -62,9 +64,12 @@ def get_user_profile(user_id, id, role):
 
             friend = cursor.fetchone()
 
-            if not friend:
+            if not friend and user_id != id:
                 user["contact"] = None
                 user["guardian_contact"] = None
+                user["is_friends"] = False
+            else:
+                user["is_friends"] = True
 
         elif user and role == "organization":
             cursor.execute(
@@ -82,6 +87,9 @@ def get_user_profile(user_id, id, role):
             if not joined:
                 user["contact"] = None
                 user["guardian_contact"] = None
+                user["is_friends"] = False
+            else:
+                user["is_friends"] = True
 
         conn.close()
         return response_schema.ProfileDetail(**user)
@@ -121,12 +129,18 @@ def update_user_profile(request, id, current_usn, picture):
     try:
         cursor.execute(
             """
-            SELECT preference_id
+            SELECT *
             FROM users
             WHERE user_id=%s
             """, (id,)
         )
         data = cursor.fetchone()
+
+        request.password = request.password if request.password else ""
+
+        if not data.get("is_new_user") and not verify_password(request.password, data.get("password")):
+            return JSONResponse({"messagge": f"Incorrect password"}, status_code=406)
+
         preference_id = data['preference_id']
     except Exception as err:
         show_responses("Failed get user preferences", 401, error=err)
@@ -139,12 +153,17 @@ def update_user_profile(request, id, current_usn, picture):
         )
         update_preference(preference, preference_id)
         
+        new_pass = None
+        if request.new_password:
+            new_pass = get_password_hash(request.new_password)
+
         cursor.execute(
             """
             UPDATE users SET
             username = COALESCE(%s, username),
             name = COALESCE(%s, name),
             email = COALESCE(%s, email),
+            password = COALESCE(%s, password),
             contact = COALESCE(%s, contact),
             guardian_contact = COALESCE(%s, guardian_contact),
             religion = COALESCE(%s, religion),  
@@ -155,7 +174,7 @@ def update_user_profile(request, id, current_usn, picture):
             is_new_user = %s
             WHERE user_id = %s
             RETURNING *;
-            """, (request.username, request.name, request.email, request.contact, 
+            """, (request.username, request.name, request.email, new_pass, request.contact, 
                   request.guardian_contact, request.religion, 
                   request.gender, request.dob, request.city, picture, False, id)
         )
@@ -168,7 +187,7 @@ def update_user_profile(request, id, current_usn, picture):
             "name": new_data['name'],
             "username": new_data['username'],
             "is_new_user": new_data['is_new_user']
-            }, "organization"]
+            }, "user"]
         
         new_token = create_access_token(data[0], data[1])
         conn.close()
