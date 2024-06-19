@@ -61,8 +61,6 @@ def get_recommendation(user_id: str):
 
     # Get Days Offline
     df["last_activity"] = pd.to_datetime(df["last_activity"]) 
-    df.loc[df.user_id == user_id, "last_activity"] = datetime.today()
-    df = df[df['last_activity'].notna()]
     df["days_offline"] = df.apply(lambda x: (datetime.today() - x.last_activity).days, axis=1)
 
     # Check if has profile picture
