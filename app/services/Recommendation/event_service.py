@@ -9,15 +9,15 @@ conn = create_connection()
 cur = conn.cursor()
 
 def add_has_profile_pic(row):
-    return 1 if row["profie_picture"] else 0
+    if row["profie_picture"] and row["profie_picture"] != "https://storage.googleapis.com/kumsia-storage/placeholder/event.jpg":
+        return 1
+    
+    return 0
 
 def get_master_hobby():
     cur.execute("SELECT * FROM master_hobby ORDER BY hobby ASC;")
     hobby_list = [h["hobby"] for h in cur.fetchall()]  # Store list directly
     return hobby_list  # Return the list itself
-
-def check_religion_match(row):
-    user_religion = user_pre
 
 def get_event_recommendation(user_id: str):
     # Get Non event joined by logged-in user
@@ -25,9 +25,8 @@ def get_event_recommendation(user_id: str):
     SELECT e.*, p.hobby, p.religion, p.city, p.gender, j.user_id AS joined
     FROM events e
     LEFT JOIN preference p ON e.preference_id = p.preference_id
-    LEFT JOIN joined_event j ON e.event_id = j.event_id
-    WHERE e.status = 'Open'
-    AND (j.user_id IS NULL OR j.user_id <> '{user_id}')
+    LEFT JOIN joined_event j ON e.event_id = j.event_id AND j.user_id = '{user_id}'
+    WHERE e.status = 'Open' AND j.user_id IS NULL
     ORDER BY e.event_start ASC;
     """
 
@@ -75,14 +74,14 @@ def get_event_recommendation(user_id: str):
 
     preprocessed_user_df = user_df.drop(["user_id", "hobby", "gender", "city", "religion"], axis=1)
     preprocessed_df = preprocessed_df.drop(["event_id", "city", "hobby", "religion", "gender", "joined"], axis=1)
-    print(preprocessed_df)
+
     # Neighbours Model
     n_neighbors = len(preprocessed_df) 
     if len(preprocessed_df) > 15:
         n_neighbors = 15
 
     knn = NearestNeighbors(n_neighbors=n_neighbors, algorithm='auto').fit(preprocessed_df)
-    distances, indices = knn.kneighbors(preprocessed_user_df)
+    _, indices = knn.kneighbors(preprocessed_user_df)
     top_n_index = indices[0]
     top_n_event = df.iloc[top_n_index]
 
@@ -91,23 +90,40 @@ def get_event_recommendation(user_id: str):
         top_n_event = top_n_event.sample(5)
     recommended_events = []
     for _, row in top_n_event.iterrows():
-        recommended_events.append(response_schema.Event(event_id=row["event_id"],
-                                                      organization_id=row["organization_id"],
-                                                      name=row["name"],
-                                                      location=row["location"],
-                                                      profile_picture=row["profie_picture"],
-                                                      status=row["status"],
-                                                      type=row["type"],
-                                                      event_start=row["event_start"],
-                                                      city=row["city"],
-                                                      link=row["link"],
-                                                      description=row["description"],
-                                                      attendee_criteria=row["attendee_criteria"],
-                                                      contact_varchar=row["contact_varchar"],
-                                                      like_count=row["like_count"],
-                                                      capacity=row["capacity"],
-                                                      last_edited=row["last_edited"]
-                                                    )
-                                )
+
+        get_query = f"""
+            SELECT 
+                e.*,
+                o.name AS organization_name,
+                CASE 
+                    WHEN je.user_id IS NOT NULL THEN true
+                    ELSE false
+                END AS joined,
+                CASE 
+                    WHEN l.user_id IS NOT NULL THEN true
+                    ELSE false
+                END AS liked,
+                p.hobby AS hobby_preference, 
+                p.religion AS religion_preference, 
+                p.city AS city_preference, 
+                p.gender AS gender_preference
+            FROM 
+                events e
+            JOIN
+                organization o ON e.organization_id = o.organization_id
+            JOIN 
+                preference p ON e.preference_id = p.preference_id
+            LEFT JOIN 
+                joined_event je ON e.event_id = je.event_id AND je.user_id = '{user_id}'
+            LEFT JOIN 
+                event_like l ON e.event_id = l.event_id AND l.user_id = '{user_id}'
+            WHERE 
+                e.event_id = '{row["event_id"]}';
+        """
+
+        cur.execute(get_query)
+        event = cur.fetchone()
+
+        recommended_events.append(response_schema.Event(**event))
+
     return response_schema.EventList(events=recommended_events)
-    return 
