@@ -1,3 +1,4 @@
+from app.services.MasterData.service import get_master_hobby
 from app.utils.database import create_connection
 from . import response_schema
 import pandas as pd
@@ -8,42 +9,28 @@ from sklearn.preprocessing import StandardScaler
 conn = create_connection()
 cur = conn.cursor()
 
-def add_has_profile_pic(row):
-    return 1 if row["profile_picture"] else 0
-
-def get_master_hobby():
-    cur.execute("SELECT * FROM master_hobby ORDER BY hobby ASC;")
-    hobby_list = [h["hobby"] for h in cur.fetchall()]  # Store list directly
-    return hobby_list  # Return the list itself
-
 def get_recommendation(user_id: str):
     # Get Non friends
     query = f"""
     SELECT * FROM (
-    SELECT U.*, P.hobby
-    FROM users U
-    JOIN friend F ON U.user_id = F.first_party_id
-    LEFT JOIN preference P on U.preference_id = P.preference_id
-    WHERE F.first_party_id != '{user_id}' OR F.second_party_id != '{user_id}'
-    UNION
-    SELECT U.*, P.hobby 
-    FROM users U 
-    JOIN friend F ON U.user_id = F.second_party_id
-    LEFT JOIN preference P on U.preference_id = P.preference_id
-    WHERE F.first_party_id != '{user_id}' OR F.second_party_id != '{user_id}'
-    UNION
-    SELECT U.*, P.hobby
-    FROM users U 
-    LEFT JOIN preference P on U.preference_id = P.preference_id
-
+        SELECT U.*, P.hobby
+        FROM users U
+        LEFT JOIN preference P on U.preference_id = P.preference_id
+        WHERE NOT EXISTS (
+            SELECT F.first_party_id, F.second_party_id
+            FROM friend F
+            WHERE (U.user_id = F.first_party_id AND F.second_party_id = '{user_id}') OR (U.user_id = F.second_party_id AND F.first_party_id = '{user_id}')
+        )
+        UNION
+        SELECT U.*, P.hobby
+        FROM users U 
+        LEFT JOIN preference P on U.preference_id = P.preference_id
+        WHERE U.user_id = '{user_id}'
     )
     ORDER BY user_id;
     """
-
     cur.execute(query)
     non_friends = cur.fetchall()
-    print(non_friends)
-
     # get user logged in's preferences
     query = f"""
     SELECT P.hobby, P.gender, P.city, P.religion
@@ -53,22 +40,20 @@ def get_recommendation(user_id: str):
     """
     cur.execute(query)
     user_preference = cur.fetchone()
-
     # turn non-friends into df
     df = pd.DataFrame.from_dict(non_friends)
 
     # get hobbies
-    hobbies = get_master_hobby()
+    hobbies = get_master_hobby().model_dump().get("Hobbies")
     # one hot encode all hobbies
     for hobby in hobbies:
-        df[hobby] = df.apply(lambda x:1 if hobby in x.hobby else 0, axis=1)
-    
+        df[hobby] = df.apply(lambda x:1 if x.hobby and hobby in x.hobby else 0, axis=1)
     # set gender match 
-    df["gender_match"] = df["gender"].apply(lambda x: 4 if x in user_preference["gender"] or len(user_preference["gender"]) == 0 else 0) 
+    df["gender_match"] = df["gender"].apply(lambda x: 4 if user_preference["gender"] == None or x in user_preference["gender"] or len(user_preference["gender"]) == 0 else 0) 
     # set city match
-    df["city_match"] = df["city"].apply(lambda x: 2 if x in user_preference["city"] or len(user_preference["city"]) == 0 else 0) 
+    df["city_match"] = df["city"].apply(lambda x: 2 if user_preference["city"] == None or x in user_preference["city"] or len(user_preference["city"]) == 0 else 0) 
     # set religion match 
-    df["religion_match"] = df["religion"].apply(lambda x: 1 if x in user_preference["religion"] or len(user_preference["religion"]) == 0 else 0) 
+    df["religion_match"] = df["religion"].apply(lambda x: 1 if user_preference["religion"] == None or x in user_preference["religion"] or len(user_preference["religion"]) == 0 else 0) 
 
     # Get Age
     df["dob"] = pd.to_datetime(df["dob"]) 
@@ -78,33 +63,28 @@ def get_recommendation(user_id: str):
     df["last_activity"] = pd.to_datetime(df["last_activity"]) 
     df["days_offline"] = df.apply(lambda x: (datetime.today() - x.last_activity).days, axis=1)
 
-    # Check if has profile picturez
-    df["has_profile_pic"] = df.apply(add_has_profile_pic, axis=1)
-
+    # Check if has profile picture
+    default_profile_pic = "https://storage.googleapis.com/kumsia-storage/placeholder/user.jpg"
+    df["has_profile_pic"] = df.apply(lambda x: 1 if x.profile_picture != default_profile_pic else 0, axis=1)
     # Drop unused columns
     preprocessed_df = df.drop(["preference_id", "username", "name", "password", "email", "contact",
                             "guardian_contact", "profile_picture", "dob", "last_activity", "hobby",
                             "religion", "gender", "city", "is_new_user"], axis=1)
-
     # Standardization only on age and offline days
     scaler = StandardScaler()
     preprocessed_df[["age", "days_offline"]] = scaler.fit_transform(preprocessed_df[["age", "days_offline"]])
-
     # Get User DF and drop user logged in from preprocessed df
-    user_df = preprocessed_df[preprocessed_df["user_id"] == user_id]
-    preprocessed_df.drop(preprocessed_df[preprocessed_df["user_id"] == user_id].index)
-
-    # separate id
-    id_df = preprocessed_df["user_id"]
-    preprocessed_df = preprocessed_df.drop(["user_id"], axis=1)
-
+    user_df = preprocessed_df.loc[preprocessed_df["user_id"] == user_id]
+    neighbors_df = preprocessed_df.loc[preprocessed_df["user_id"] != user_id]
+    # drop id
+    neighbors_df = neighbors_df.drop(["user_id"], axis=1)
+    user_df = user_df.drop(["user_id"], axis=1)
     # Neighbours Model
-    n_neighbors = len(preprocessed_df) 
-    if len(preprocessed_df) > 15:
+    n_neighbors = len(neighbors_df) 
+    if len(neighbors_df) > 15:
         n_neighbors = 15
-
-    knn = NearestNeighbors(n_neighbors=n_neighbors, algorithm='auto').fit(preprocessed_df)
-    distances, indices = knn.kneighbors(user_df.drop(['user_id'], axis=1))
+    knn = NearestNeighbors(n_neighbors=n_neighbors, algorithm='auto').fit(neighbors_df)
+    _, indices = knn.kneighbors(user_df)
     top_n_index = indices[0]
     top_n_user = df.iloc[top_n_index]
 

@@ -43,48 +43,39 @@ def get_event_recommendation(user_id: str):
     """
     cur.execute(query)
     user_preference = cur.fetchone()
-    # turn non-friends into df
+
+    # turn user preference into df
     df = pd.DataFrame.from_dict(non_join)
     data = [user_preference]
     user_df = pd.DataFrame(data)
-    # get hobbies
+
+    # Get hobbies
     hobbies = get_master_hobby()
-    # one hot encode all hobbies
+    # One hot encode all hobbies
     for hobby in hobbies:
         df[hobby] = df.apply(lambda x:1 if hobby in x.hobby else 0, axis=1)
         user_df[hobby] = user_df.apply(lambda x:1 if hobby in x.hobby else 0, axis=1)
 
-    # set gender match 
-    df["gender_match"] = df["gender"].apply(lambda x: 4 if x in user_preference["gender"] or len(user_preference["gender"]) == 0 else 0) 
+    # Set gender match 
+    df["gender_match"] = df["gender"].apply(lambda x: 4 if user_preference["gender"] == None or x in user_preference["gender"] or len(user_preference["gender"]) == 0 else 0) 
     user_df["gender_match"] = 4
-    # set city match
+    # Set city match
     df["city_match"] = df["city"].apply(lambda x: 1 if (x in user_preference.get("city", []) or x == []) else 0)
     user_df["city_match"] = 1
-    # set religion match 
+    # Set religion match 
     df["religion_match"] = df["religion"].apply(lambda x: 1 if (x in user_preference.get("religion", []) or x == []) else 0)
     user_df["religion_match"] = 1
-    #Check if has profile picturez
+    # Check if has profile picture
     df["has_profile_pic"] = df.apply(add_has_profile_pic, axis=1)
     user_df["has_profile_pic"] = 1
-    # Drop unused columns in main df
+    # Drop unused columns
     preprocessed_df = df.drop(["organization_id", "preference_id", "name", "location", "profie_picture", 
                             "status", "type", "event_start", "link", "description", "attendee_criteria", 
                             "contact_varchar", "like_count", "capacity", "last_edited"], axis=1)
 
     preprocessed_user_df = user_df.drop(["user_id", "hobby", "gender", "city", "religion"], axis=1)
-    
-
-    # Standardization only on age and offline days
-    #scaler = StandardScaler()
-    #preprocessed_df[["age", "days_offline"]] = scaler.fit_transform(preprocessed_df[["age", "days_offline"]])
-
-    # Get User DF and drop user logged in from preprocessed df
-    #preprocessed_df.drop(preprocessed_df[preprocessed_df["user_id"] == user_id].index)
-
-    # separate id and drop city, hobby, religion, gender event preferences
-    id_df = preprocessed_df["event_id"]
     preprocessed_df = preprocessed_df.drop(["event_id", "city", "hobby", "religion", "gender", "joined"], axis=1)
-
+    print(preprocessed_df)
     # Neighbours Model
     n_neighbors = len(preprocessed_df) 
     if len(preprocessed_df) > 15:
@@ -97,9 +88,9 @@ def get_event_recommendation(user_id: str):
 
     #if more than 5 reccommended accounts, pick random 5
     if n_neighbors > 5:
-        top_n_user = top_n_event.sample(5)
+        top_n_event = top_n_event.sample(5)
     recommended_events = []
-    for _, row in top_n_user.iterrows():
+    for _, row in top_n_event.iterrows():
         recommended_events.append(response_schema.Event(event_id=row["event_id"],
                                                       organization_id=row["organization_id"],
                                                       name=row["name"],
