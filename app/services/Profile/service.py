@@ -25,7 +25,7 @@ def get_profile(id):
         if not temp_data:
             show_responses("Failed to get users information", 404, error=err)
 
-        temp_data["is_friends"] = True
+        temp_data["is_friends"] = 2
 
         conn.close()
         return response_schema.ProfileDetail(**temp_data)
@@ -56,20 +56,27 @@ def get_user_profile(user_id, id, role):
                 f"""
                 SELECT *
                 FROM friend
-                WHERE status = TRUE and 
+                WHERE 
                     (first_party_id = '{user_id}' and second_party_id = '{id}')
                     or (first_party_id = '{id}' and second_party_id = '{user_id}');
                 """
             )
 
-            friend = cursor.fetchone()
+            friend_req = cursor.fetchone()
 
-            if not friend and user_id != id:
+            if not friend_req and user_id != id:
                 user["contact"] = None
                 user["guardian_contact"] = None
-                user["is_friends"] = False
+                user["is_friends"] = 0
+            elif friend_req and user_id != id:
+                if not friend_req.get("status"):
+                    user["contact"] = None
+                    user["guardian_contact"] = None
+                    user["is_friends"] = 1
+                else:
+                    user["is_friends"] = 2
             else:
-                user["is_friends"] = True
+                user["is_friends"] = 2
 
         elif user and role == "organization":
             cursor.execute(
@@ -87,9 +94,9 @@ def get_user_profile(user_id, id, role):
             if not joined:
                 user["contact"] = None
                 user["guardian_contact"] = None
-                user["is_friends"] = False
+                user["is_friends"] = 0
             else:
-                user["is_friends"] = True
+                user["is_friends"] = 2
 
         conn.close()
         return response_schema.ProfileDetail(**user)
