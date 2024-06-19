@@ -19,6 +19,7 @@ class ProfileDetail(BaseModel):
     preference_religion: Optional[list]
     preference_city: Optional[list]
     preference_gender: Optional[list]
+    is_friends: Optional[bool]
 
 class OrganizationDetail(BaseModel):
     organization_id: Optional[str]
