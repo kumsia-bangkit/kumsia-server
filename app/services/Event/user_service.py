@@ -232,8 +232,9 @@ def join_event(event_id: str, user_id: str):
     
     update_query = f"""
         UPDATE events 
-        SET capacity = capacity - 1
-        WHERE event_id = '{str(event_id)}' AND capacity > 0 AND status = 'Open'
+        SET status = CASE WHEN capacity = 1 THEN "Closed" ELSE status END,
+            capacity = capacity - 1
+        WHERE event_id = '{str(event_id)}' AND event_start > NOW() AND capacity > 0 AND status = 'Open'
         RETURNING event_id;
         """
         
@@ -298,8 +299,9 @@ def cancel_join_event(event_id: str, user_id: str):
 
     update_query = f"""
         UPDATE events 
-        SET capacity = capacity + 1
-        WHERE event_id = '{str(event_id)}'
+        SET status = CASE WHEN capacity = 0 THEN "Open" ELSE status END,
+            capacity = capacity + 1
+        WHERE event_id = '{str(event_id)}' AND event_start > NOW() AND status != 'Cancelled'
         RETURNING event_id;
         """
         
