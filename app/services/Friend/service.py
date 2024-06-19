@@ -1,18 +1,19 @@
 from fastapi.responses import JSONResponse
 from . import response_schema
 from app.utils.database import create_connection
+from app.utils.utility import update_last_activity
 
 conn = create_connection()
 cur = conn.cursor()
 
 def get_friends(user_id: str):
     get_query = f"""
-        SELECT u.user_id, u.username, u.name
+        SELECT u.user_id, u.username, u.name, u.profile_picture
         FROM users u
         JOIN friend f ON u.user_id = f.second_party_id
         WHERE f.first_party_id = '{user_id}' AND f.status = true
         UNION
-        SELECT u.user_id, u.username, u.name
+        SELECT u.user_id, u.username, u.name, u.profile_picture
         FROM users u
         JOIN friend f ON u.user_id = f.first_party_id
         WHERE f.second_party_id = '{user_id}' AND f.status = true;
@@ -24,8 +25,9 @@ def get_friends(user_id: str):
     return response_schema.FriendList(friends=friend)
 
 def get_friend_req(user_id: str):
+    update_last_activity(user_id)
     get_query = f"""
-        SELECT u.user_id, u.username, u.name
+        SELECT u.user_id, u.username, u.name, u.profile_picture
         FROM users u
         JOIN friend f ON u.user_id = f.first_party_id
         WHERE f.second_party_id = '{user_id}' AND f.status = false;

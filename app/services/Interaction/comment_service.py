@@ -1,3 +1,4 @@
+from datetime import datetime
 import uuid
 from fastapi.responses import JSONResponse
 from . import request_schema, response_schema
@@ -14,7 +15,8 @@ def get_all_by_event(event_id: str):
         JOIN
             users u ON c.user_id = u.user_id
         WHERE 
-            event_id = '{event_id}';
+            event_id = '{event_id}'
+        ORDER BY c.created_at ASC;
     """
     cur.execute(get_query)
     comments = cur.fetchall()
@@ -24,17 +26,18 @@ def get_all_by_event(event_id: str):
 def post_comment(comment: request_schema.Comment, user_id: str):
     insert_query = """
     INSERT INTO comment_table (
-        comment_id, user_id, event_id, comment_text
+        comment_id, user_id, event_id, comment_text, created_at
     ) VALUES (
-        %s, %s, %s, %s
+        %s, %s, %s, %s, %s
     ) RETURNING *;
     """
 
     event_id = comment.event_id
     comment_text = comment.comment_text
-
+    created_at = datetime.now().isoformat()
+    
     comment_data = (
-        str(uuid.uuid4()), user_id, event_id, comment_text
+        str(uuid.uuid4()), user_id, event_id, comment_text, created_at
     )
     
     try:

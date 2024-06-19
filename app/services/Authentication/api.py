@@ -4,6 +4,7 @@ from fastapi.responses import JSONResponse
 from typing import Annotated
 from app.utils.authentication import authenticate_user, create_access_token, get_current_user
 from . import response_schema, request_schema, service as AuthService
+from app.utils.utility import update_last_activity
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 auth_router = APIRouter()
@@ -15,6 +16,7 @@ async def login_for_access_token(request: Annotated[OAuth2PasswordRequestForm, D
     if isinstance(user_data, JSONResponse):
         return user_data
     token = create_access_token(user_data[0], user_data[1])
+    update_last_activity(user_data[0]['sub'])
     return response_schema.Login(access_token=token)
 
 @auth_router.post('/register', tags=['Authentication'])

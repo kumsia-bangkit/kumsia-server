@@ -3,7 +3,7 @@ from . import request_schema, response_schema
 from app.services.Event.utils import update_preference
 from fastapi.responses import JSONResponse
 from app.utils.database import create_connection
-from app.utils.utility import show_responses, find_duplicate_data
+from app.utils.utility import show_responses, find_duplicate_data, update_last_activity
 
 def get_profile(id):
     conn = create_connection()
@@ -24,6 +24,8 @@ def get_profile(id):
         temp_data = cursor.fetchone()
         if not temp_data:
             show_responses("Failed to get users information", 404, error=err)
+
+        temp_data["is_friends"] = 2
 
         conn.close()
         return response_schema.ProfileDetail(**temp_data)
@@ -54,17 +56,27 @@ def get_user_profile(user_id, id, role):
                 f"""
                 SELECT *
                 FROM friend
-                WHERE status = TRUE and 
+                WHERE 
                     (first_party_id = '{user_id}' and second_party_id = '{id}')
                     or (first_party_id = '{id}' and second_party_id = '{user_id}');
                 """
             )
 
-            friend = cursor.fetchone()
+            friend_req = cursor.fetchone()
 
-            if not friend:
+            if not friend_req and user_id != id:
                 user["contact"] = None
                 user["guardian_contact"] = None
+                user["is_friends"] = 0
+            elif friend_req and user_id != id:
+                if not friend_req.get("status"):
+                    user["contact"] = None
+                    user["guardian_contact"] = None
+                    user["is_friends"] = 1
+                else:
+                    user["is_friends"] = 2
+            else:
+                user["is_friends"] = 2
 
         elif user and role == "organization":
             cursor.execute(
@@ -82,6 +94,9 @@ def get_user_profile(user_id, id, role):
             if not joined:
                 user["contact"] = None
                 user["guardian_contact"] = None
+                user["is_friends"] = 0
+            else:
+                user["is_friends"] = 2
 
         conn.close()
         return response_schema.ProfileDetail(**user)
@@ -107,6 +122,7 @@ def get_org_profile(id):
         show_responses("Failed to get organization information", 404, error=err)
 
 def update_user_profile(request, id, current_usn, picture):
+    update_last_activity(id)
     conn = create_connection()
     cursor = conn.cursor()
     username = request.username

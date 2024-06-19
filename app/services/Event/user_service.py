@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from fastapi.encoders import jsonable_encoder
+from app.utils.utility import update_last_activity
 from fastapi.responses import JSONResponse
 from . import request_schema, response_schema
 from app.enums.event import Status
@@ -55,7 +56,7 @@ def get_all(user_id: str):
     """
     cur.execute(get_query)
     events = cur.fetchall()
-
+    update_last_activity(user_id)
     return response_schema.UserEventList(events=events)
 
 def get_all_joined_event(user_id: str):
@@ -232,8 +233,9 @@ def join_event(event_id: str, user_id: str):
     
     update_query = f"""
         UPDATE events 
-        SET capacity = capacity - 1
-        WHERE event_id = '{str(event_id)}' AND capacity > 0 AND status = 'Open'
+        SET status = CASE WHEN capacity = 1 THEN 'Closed' ELSE status END,
+            capacity = capacity - 1
+        WHERE event_id = '{str(event_id)}' AND event_start > NOW() AND capacity > 0 AND status = 'Open'
         RETURNING event_id;
         """
         
@@ -266,6 +268,7 @@ def join_event(event_id: str, user_id: str):
         conn.commit()
 
         new_joined_event = cur.fetchone()
+        update_last_activity(user_id)
 
         return get_event_by_id(new_joined_event["event_id"], user_id)
         
@@ -298,8 +301,9 @@ def cancel_join_event(event_id: str, user_id: str):
 
     update_query = f"""
         UPDATE events 
-        SET capacity = capacity + 1
-        WHERE event_id = '{str(event_id)}'
+        SET status = CASE WHEN capacity = 0 THEN 'Open' ELSE status END,
+            capacity = capacity + 1
+        WHERE event_id = '{str(event_id)}' AND event_start > NOW() AND status != 'Cancelled'
         RETURNING event_id;
         """
         
@@ -308,7 +312,7 @@ def cancel_join_event(event_id: str, user_id: str):
         conn.commit()
         
         unjoined_event = cur.fetchone()
-
+        update_last_activity(user_id)
         return get_event_by_id(unjoined_event["event_id"], user_id)
 
     except Exception as e:
