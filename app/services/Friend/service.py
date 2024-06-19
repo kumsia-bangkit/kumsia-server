@@ -7,7 +7,7 @@ cur = conn.cursor()
 
 def get_friends(user_id: str):
     get_query = f"""
-        SELECT u.user_id, u.username, u.name
+        SELECT u.user_id, u.username, u.name, u.profile_picture
         FROM users u
         JOIN friend f ON u.user_id = f.second_party_id
         WHERE f.first_party_id = '{user_id}' AND f.status = true
@@ -25,7 +25,7 @@ def get_friends(user_id: str):
 
 def get_friend_req(user_id: str):
     get_query = f"""
-        SELECT u.user_id, u.username, u.name
+        SELECT u.user_id, u.username, u.name, u.profile_picture
         FROM users u
         JOIN friend f ON u.user_id = f.first_party_id
         WHERE f.second_party_id = '{user_id}' AND f.status = false;

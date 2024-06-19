@@ -25,6 +25,8 @@ def get_profile(id):
         if not temp_data:
             show_responses("Failed to get users information", 404, error=err)
 
+        temp_data["is_friends"] = True
+
         conn.close()
         return response_schema.ProfileDetail(**temp_data)
     except Exception as err:
@@ -62,9 +64,12 @@ def get_user_profile(user_id, id, role):
 
             friend = cursor.fetchone()
 
-            if not friend:
+            if not friend and user_id != id:
                 user["contact"] = None
                 user["guardian_contact"] = None
+                user["is_friends"] = False
+            else:
+                user["is_friends"] = True
 
         elif user and role == "organization":
             cursor.execute(
@@ -82,6 +87,9 @@ def get_user_profile(user_id, id, role):
             if not joined:
                 user["contact"] = None
                 user["guardian_contact"] = None
+                user["is_friends"] = False
+            else:
+                user["is_friends"] = True
 
         conn.close()
         return response_schema.ProfileDetail(**user)
@@ -181,7 +189,7 @@ def update_user_profile(request, id, current_usn, picture):
             "is_new_user": new_data['is_new_user']
             }, "user"]
         
-        new_token = create_access_token(data[0], "user")
+        new_token = create_access_token(data[0], data[1])
         conn.close()
         return response_schema.Token(access_token=new_token)
     except Exception as err:
