@@ -8,41 +8,26 @@ from sklearn.preprocessing import StandardScaler
 conn = create_connection()
 cur = conn.cursor()
 
-def add_has_profile_pic(row):
-    return 1 if row["profile_picture"] else 0
-
-def get_master_hobby():
-    cur.execute("SELECT * FROM master_hobby ORDER BY hobby ASC;")
-    hobby_list = [h["hobby"] for h in cur.fetchall()]  # Store list directly
-    return hobby_list  # Return the list itself
-
-def get_recommendation(user_id: str):
+def get_event_recommendation(user_id: str):
     # Get Non friends
     query = f"""
     SELECT * FROM (
     SELECT U.*, P.hobby
     FROM users U
-    JOIN friend F ON U.user_id = F.first_party_id
+    JOIN joined_event J ON U.user_id = J.user_id
     LEFT JOIN preference P on U.preference_id = P.preference_id
-    WHERE F.first_party_id != '{user_id}' OR F.second_party_id != '{user_id}'
-    UNION
-    SELECT U.*, P.hobby 
-    FROM users U 
-    JOIN friend F ON U.user_id = F.second_party_id
-    LEFT JOIN preference P on U.preference_id = P.preference_id
-    WHERE F.first_party_id != '{user_id}' OR F.second_party_id != '{user_id}'
+    WHERE J.user_id != '{user_id}'
     UNION
     SELECT U.*, P.hobby
     FROM users U 
     LEFT JOIN preference P on U.preference_id = P.preference_id
-
     )
     ORDER BY user_id;
     """
-
+    
     cur.execute(query)
-    non_friends = cur.fetchall()
-    print(non_friends)
+    non_join = cur.fetchall()
+    print(non_join)
 
     # get user logged in's preferences
     query = f"""
@@ -51,11 +36,11 @@ def get_recommendation(user_id: str):
     JOIN preference P on U.preference_id = P.preference_id
     WHERE u.user_id = '{user_id}'
     """
-    cur.execute(query)
-    user_preference = cur.fetchone()
+    #cur.execute(query)
+    #user_preference = cur.fetchone()
 
     # turn non-friends into df
-    df = pd.DataFrame.from_dict(non_friends)
+    df = pd.DataFrame.from_dict(non_join)
 
     # get hobbies
     hobbies = get_master_hobby()
@@ -82,39 +67,39 @@ def get_recommendation(user_id: str):
     df["has_profile_pic"] = df.apply(add_has_profile_pic, axis=1)
 
     # Drop unused columns
-    preprocessed_df = df.drop(["preference_id", "username", "name", "password", "email", "contact",
+    #preprocessed_df = df.drop(["preference_id", "username", "name", "password", "email", "contact",
                             "guardian_contact", "profile_picture", "dob", "last_activity", "hobby",
                             "religion", "gender", "city", "is_new_user"], axis=1)
 
     # Standardization only on age and offline days
-    scaler = StandardScaler()
-    preprocessed_df[["age", "days_offline"]] = scaler.fit_transform(preprocessed_df[["age", "days_offline"]])
+    #scaler = StandardScaler()
+    #preprocessed_df[["age", "days_offline"]] = scaler.fit_transform(preprocessed_df[["age", "days_offline"]])
 
     # Get User DF and drop user logged in from preprocessed df
-    user_df = preprocessed_df[preprocessed_df["user_id"] == user_id]
-    preprocessed_df.drop(preprocessed_df[preprocessed_df["user_id"] == user_id].index)
+    #user_df = preprocessed_df[preprocessed_df["user_id"] == user_id]
+    #preprocessed_df.drop(preprocessed_df[preprocessed_df["user_id"] == user_id].index)
 
     # separate id
-    id_df = preprocessed_df["user_id"]
-    preprocessed_df = preprocessed_df.drop(["user_id"], axis=1)
+    #id_df = preprocessed_df["user_id"]
+    #preprocessed_df = preprocessed_df.drop(["user_id"], axis=1)
 
     # Neighbours Model
-    n_neighbors = len(preprocessed_df) 
-    if len(preprocessed_df) > 15:
-        n_neighbors = 15
+    #n_neighbors = len(preprocessed_df) 
+    #if len(preprocessed_df) > 15:
+    #    n_neighbors = 15
 
-    knn = NearestNeighbors(n_neighbors=n_neighbors, algorithm='auto').fit(preprocessed_df)
-    distances, indices = knn.kneighbors(user_df.drop(['user_id'], axis=1))
-    top_n_index = indices[0]
-    top_n_user = df.iloc[top_n_index]
+    #knn = NearestNeighbors(n_neighbors=n_neighbors, algorithm='auto').fit(preprocessed_df)
+    #distances, indices = knn.kneighbors(user_df.drop(['user_id'], axis=1))
+    #top_n_index = indices[0]
+    #top_n_user = df.iloc[top_n_index]
 
     # if more than 5 reccommended accounts, pick random 5
-    if n_neighbors > 5:
-        top_n_user = top_n_user.sample(5)
+    #if n_neighbors > 5:
+    #    top_n_user = top_n_user.sample(5)
 
-    recommended_users = []
-    for _, row in top_n_user.iterrows():
-        recommended_users.append(response_schema.User(user_id=row["user_id"],
+    #recommended_users = []
+    #for _, row in top_n_user.iterrows():
+    #    recommended_users.append(response_schema.User(user_id=row["user_id"],
                                                       username=row["username"],
                                                       name=row["name"],
                                                       dob=row["dob"].strftime("%Y-%m-%d"),
@@ -125,4 +110,5 @@ def get_recommendation(user_id: str):
                                                       hobbies=row["hobby"],
                                                     )
                                 )
-    return response_schema.UsersList(users=recommended_users)
+    #return response_schema.UsersList(users=recommended_users)
+    return 
