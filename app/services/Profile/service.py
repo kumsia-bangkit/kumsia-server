@@ -3,7 +3,7 @@ from . import request_schema, response_schema
 from app.services.Event.utils import update_preference
 from fastapi.responses import JSONResponse
 from app.utils.database import create_connection
-from app.utils.utility import show_responses, find_duplicate_data
+from app.utils.utility import show_responses, find_duplicate_data, update_last_activity
 
 def get_profile(id):
     conn = create_connection()
@@ -122,6 +122,7 @@ def get_org_profile(id):
         show_responses("Failed to get organization information", 404, error=err)
 
 def update_user_profile(request, id, current_usn, picture):
+    update_last_activity(id)
     conn = create_connection()
     cursor = conn.cursor()
     username = request.username
