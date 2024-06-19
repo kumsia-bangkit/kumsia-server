@@ -16,7 +16,7 @@ def get_all_by_event(event_id: str):
             users u ON c.user_id = u.user_id
         WHERE 
             event_id = '{event_id}'
-        ORDER BY created_at ASC;
+        ORDER BY c.created_at ASC;
     """
     cur.execute(get_query)
     comments = cur.fetchall()
