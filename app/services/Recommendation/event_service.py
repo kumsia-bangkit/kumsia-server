@@ -8,107 +8,115 @@ from sklearn.preprocessing import StandardScaler
 conn = create_connection()
 cur = conn.cursor()
 
+def add_has_profile_pic(row):
+    return 1 if row["profie_picture"] else 0
+
+def get_master_hobby():
+    cur.execute("SELECT * FROM master_hobby ORDER BY hobby ASC;")
+    hobby_list = [h["hobby"] for h in cur.fetchall()]  # Store list directly
+    return hobby_list  # Return the list itself
+
+def check_religion_match(row):
+    user_religion = user_pre
+
 def get_event_recommendation(user_id: str):
-    # Get Non friends
+    # Get Non event joined by logged-in user
     query = f"""
-    SELECT * FROM (
-    SELECT U.*, P.hobby
-    FROM users U
-    JOIN joined_event J ON U.user_id = J.user_id
-    LEFT JOIN preference P on U.preference_id = P.preference_id
-    WHERE J.user_id != '{user_id}'
-    UNION
-    SELECT U.*, P.hobby
-    FROM users U 
-    LEFT JOIN preference P on U.preference_id = P.preference_id
-    )
-    ORDER BY user_id;
+    SELECT e.*, p.hobby, p.religion, p.city, p.gender, j.user_id AS joined
+    FROM events e
+    LEFT JOIN preference p ON e.preference_id = p.preference_id
+    LEFT JOIN joined_event j ON e.event_id = j.event_id
+    WHERE e.status = 'Open'
+    AND (j.user_id IS NULL OR j.user_id <> '{user_id}')
+    ORDER BY e.event_start ASC;
     """
-    
+
     cur.execute(query)
     non_join = cur.fetchall()
-    print(non_join)
 
-    # get user logged in's preferences
+    # get user logged in's preferences and info
     query = f"""
-    SELECT P.hobby, P.gender, P.city, P.religion
+    SELECT u.user_id, P.hobby, P.gender, P.city, P.religion
     FROM users U
     JOIN preference P on U.preference_id = P.preference_id
     WHERE u.user_id = '{user_id}'
     """
-    #cur.execute(query)
-    #user_preference = cur.fetchone()
-
+    cur.execute(query)
+    user_preference = cur.fetchone()
     # turn non-friends into df
     df = pd.DataFrame.from_dict(non_join)
-
+    data = [user_preference]
+    user_df = pd.DataFrame(data)
     # get hobbies
     hobbies = get_master_hobby()
     # one hot encode all hobbies
     for hobby in hobbies:
         df[hobby] = df.apply(lambda x:1 if hobby in x.hobby else 0, axis=1)
-    
+        user_df[hobby] = user_df.apply(lambda x:1 if hobby in x.hobby else 0, axis=1)
+
     # set gender match 
     df["gender_match"] = df["gender"].apply(lambda x: 4 if x in user_preference["gender"] or len(user_preference["gender"]) == 0 else 0) 
+    user_df["gender_match"] = 4
     # set city match
-    df["city_match"] = df["city"].apply(lambda x: 2 if x in user_preference["city"] or len(user_preference["city"]) == 0 else 0) 
+    df["city_match"] = df["city"].apply(lambda x: 1 if (x in user_preference.get("city", []) or x == []) else 0)
+    user_df["city_match"] = 1
     # set religion match 
-    df["religion_match"] = df["religion"].apply(lambda x: 1 if x in user_preference["religion"] or len(user_preference["religion"]) == 0 else 0) 
-
-    # Get Age
-    df["dob"] = pd.to_datetime(df["dob"]) 
-    df["age"] = df.apply(lambda x: (datetime.today() - x.dob).days, axis=1)
-
-    # Get Days Offline
-    df["last_activity"] = pd.to_datetime(df["last_activity"]) 
-    df["days_offline"] = df.apply(lambda x: (datetime.today() - x.last_activity).days, axis=1)
-
-    # Check if has profile picturez
+    df["religion_match"] = df["religion"].apply(lambda x: 1 if (x in user_preference.get("religion", []) or x == []) else 0)
+    user_df["religion_match"] = 1
+    #Check if has profile picturez
     df["has_profile_pic"] = df.apply(add_has_profile_pic, axis=1)
+    user_df["has_profile_pic"] = 1
+    # Drop unused columns in main df
+    preprocessed_df = df.drop(["organization_id", "preference_id", "name", "location", "profie_picture", 
+                            "status", "type", "event_start", "link", "description", "attendee_criteria", 
+                            "contact_varchar", "like_count", "capacity", "last_edited"], axis=1)
 
-    # Drop unused columns
-    #preprocessed_df = df.drop(["preference_id", "username", "name", "password", "email", "contact",
-                            "guardian_contact", "profile_picture", "dob", "last_activity", "hobby",
-                            "religion", "gender", "city", "is_new_user"], axis=1)
+    preprocessed_user_df = user_df.drop(["user_id", "hobby", "gender", "city", "religion"], axis=1)
+    
 
     # Standardization only on age and offline days
     #scaler = StandardScaler()
     #preprocessed_df[["age", "days_offline"]] = scaler.fit_transform(preprocessed_df[["age", "days_offline"]])
 
     # Get User DF and drop user logged in from preprocessed df
-    #user_df = preprocessed_df[preprocessed_df["user_id"] == user_id]
     #preprocessed_df.drop(preprocessed_df[preprocessed_df["user_id"] == user_id].index)
 
-    # separate id
-    #id_df = preprocessed_df["user_id"]
-    #preprocessed_df = preprocessed_df.drop(["user_id"], axis=1)
+    # separate id and drop city, hobby, religion, gender event preferences
+    id_df = preprocessed_df["event_id"]
+    preprocessed_df = preprocessed_df.drop(["event_id", "city", "hobby", "religion", "gender", "joined"], axis=1)
 
     # Neighbours Model
-    #n_neighbors = len(preprocessed_df) 
-    #if len(preprocessed_df) > 15:
-    #    n_neighbors = 15
+    n_neighbors = len(preprocessed_df) 
+    if len(preprocessed_df) > 15:
+        n_neighbors = 15
 
-    #knn = NearestNeighbors(n_neighbors=n_neighbors, algorithm='auto').fit(preprocessed_df)
-    #distances, indices = knn.kneighbors(user_df.drop(['user_id'], axis=1))
-    #top_n_index = indices[0]
-    #top_n_user = df.iloc[top_n_index]
+    knn = NearestNeighbors(n_neighbors=n_neighbors, algorithm='auto').fit(preprocessed_df)
+    distances, indices = knn.kneighbors(preprocessed_user_df)
+    top_n_index = indices[0]
+    top_n_event = df.iloc[top_n_index]
 
-    # if more than 5 reccommended accounts, pick random 5
-    #if n_neighbors > 5:
-    #    top_n_user = top_n_user.sample(5)
-
-    #recommended_users = []
-    #for _, row in top_n_user.iterrows():
-    #    recommended_users.append(response_schema.User(user_id=row["user_id"],
-                                                      username=row["username"],
+    #if more than 5 reccommended accounts, pick random 5
+    if n_neighbors > 5:
+        top_n_user = top_n_event.sample(5)
+    recommended_events = []
+    for _, row in top_n_user.iterrows():
+        recommended_events.append(response_schema.Event(event_id=row["event_id"],
+                                                      organization_id=row["organization_id"],
                                                       name=row["name"],
-                                                      dob=row["dob"].strftime("%Y-%m-%d"),
-                                                      profile_picture=row["profile_picture"],
-                                                      religion=row["religion"],
-                                                      gender=row["gender"],
+                                                      location=row["location"],
+                                                      profile_picture=row["profie_picture"],
+                                                      status=row["status"],
+                                                      type=row["type"],
+                                                      event_start=row["event_start"],
                                                       city=row["city"],
-                                                      hobbies=row["hobby"],
+                                                      link=row["link"],
+                                                      description=row["description"],
+                                                      attendee_criteria=row["attendee_criteria"],
+                                                      contact_varchar=row["contact_varchar"],
+                                                      like_count=row["like_count"],
+                                                      capacity=row["capacity"],
+                                                      last_edited=row["last_edited"]
                                                     )
                                 )
-    #return response_schema.UsersList(users=recommended_users)
+    return response_schema.EventList(events=recommended_events)
     return 
