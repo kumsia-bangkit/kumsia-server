@@ -36,7 +36,7 @@ def register(request):
         conn.commit()
         update_last_activity(user_id)
         conn.close()
-        return JSONResponse({"message": "Account has beed created"}, status_code=201)
+        return JSONResponse({"message": "Account has been created"}, status_code=201)
     except Exception as err:
         return JSONResponse({"message": "Failed creating an account", "err": err}, status_code=500)
 
@@ -59,6 +59,6 @@ def register_organization(request):
         )
         conn.commit()
         conn.close()
-        return JSONResponse({"message": "Account has beed created"}, status_code=201)
+        return JSONResponse({"message": "Account has been created"}, status_code=201)
     except Exception as err:
         return JSONResponse({"message": "Failed creating an account", "err": err}, status_code=500)
