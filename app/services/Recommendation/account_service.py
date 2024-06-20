@@ -90,7 +90,7 @@ def get_recommendation(user_id: str):
 
     # if more than 5 reccommended accounts, pick random 5
     if n_neighbors > 5:
-        top_n_user = top_n_user.sample(5)
+        top_n_user = top_n_user[top_n_user["user_id"] != user_id].sample(5)
 
     recommended_users = []
     for _, row in top_n_user.iterrows():
