@@ -89,8 +89,8 @@ def get_recommendation(user_id: str):
     top_n_user = df.iloc[top_n_index]
 
     # if more than 5 reccommended accounts, pick random 5
-    if n_neighbors > 5:
-        top_n_user = top_n_user[top_n_user["user_id"] != user_id].sample(5)
+    if n_neighbors > 6:
+        top_n_user = top_n_user[top_n_user["user_id"] != user_id].sample(6)
 
     recommended_users = []
     for _, row in top_n_user.iterrows():
