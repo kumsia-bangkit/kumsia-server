@@ -331,8 +331,8 @@ def close_event():
     try:
         cursor.execute(
             """
-            UPDATE event
-            SET status = 'closed'
+            UPDATE events
+            SET status = 'Closed'
             WHERE event_start < NOW();
             """
         )

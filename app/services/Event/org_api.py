@@ -1,3 +1,5 @@
+import logging
+
 from typing import Annotated
 from fastapi import APIRouter, File, Form, Header, UploadFile
 from fastapi.responses import JSONResponse
@@ -6,6 +8,7 @@ from app.services.gcs import GCStorage
 from app.utils.authentication import validate_token_and_id
 from fastapi_utilities import repeat_at
 
+logger = logging.getLogger("uvicorn")
 org_event_router = APIRouter(prefix="/events/org", tags=['Event Organization'])
 
 ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/jpg", "image/png", "image/gif"}
@@ -62,5 +65,7 @@ async def cancel_event(event_id: str, access_token: Annotated[str, Header()]):
 @org_event_router.on_event("startup")
 @repeat_at(cron="*/2 * * * *")
 async def close_event():
+    logger.info("close_event method called")
     close_event_response = EventService.close_event()
+    logger.info(f"close_event response: {close_event_response}")
     return close_event_response
